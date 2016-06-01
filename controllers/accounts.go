@@ -1,0 +1,155 @@
+package controllers
+
+import (
+	"beepress/models"
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/validation"
+	"regexp"
+)
+
+//用户账户相关的控制器
+type Accounts struct {
+	BaseController
+}
+
+var (
+	regexRequireUserActions, _ = regexp.Compile("Edit|Update|Password|UpdatePassword")
+)
+
+func (this *Accounts) NestPrepare() {
+	con, _ := this.GetControllerAndAction()
+	if regexRequireUserActions.MatchString(con) {
+		this.requireUser()
+	}
+}
+
+func (this *Accounts) New() {
+	this.Data["title"] = "注册新用户"
+	this.Data["controller_name"] = "Topic"
+	this.Layout = "layout/layout.html"
+	this.TplName = "accounts/new.html"
+}
+
+func (this *Accounts) Create() {
+	u := new(models.User)
+	newUser := models.User{}
+	v := validation.Validation{}
+	flash := beego.NewFlash()
+
+	this.Data["title"] = "注册新用户"
+	this.Data["controller_name"] = "Topic"
+	this.Layout = "layout/layout.html"
+
+	if !this.validateCaptcha(this.GetString("captcha")) {
+		v.SetError("captcha", "验证码不正确")
+		flash.Error("验证码不正确")
+		flash.Store(&this.Controller)
+		this.TplName = "accounts/new.html"
+		return
+	}
+
+	newUser, v = u.Signup(this.GetString("login"), this.GetString("email"), this.GetString("password"), this.GetString("password-confirm"))
+	if v.HasErrors() {
+		for _, val := range v.Errors{
+			flash.Error(val.Message)
+		}
+		flash.Store(&this.Controller)
+		this.TplName = "accounts/new.html"
+		return
+	}
+
+	this.storeUser(&newUser)
+	flash.Success("注册成功")
+	this.Redirect("/")
+}
+
+func (this *Accounts) Login() {
+	this.Data["title"] = "登录"
+	this.Data["controller_name"] = "Topic"
+	this.Layout = "layout/layout.html"
+	this.TplName = "accounts/login.html"
+
+}
+
+func (this *Accounts) LoginCreate() {
+	u := models.User{}
+	newUser := models.User{}
+	v := validation.Validation{}
+	flash := beego.NewFlash()
+
+	this.Data["title"] = "登录"
+	this.Data["controller_name"] = "Topic"
+	this.Layout = "layout/layout.html"
+	this.TplName = "accounts/login.html"
+
+	if !this.validateCaptcha(this.GetString("captcha")) {
+		v.SetError("captcha", "验证码不正确")
+		flash.Error("验证码不正确")
+		flash.Store(&this.Controller)
+		return
+	}
+
+	newUser, v = u.Signin(this.GetString("login"), this.GetString("password"))
+	if v.HasErrors() {
+		for _, val := range v.Errors{
+			flash.Error(val.Message)
+		}
+		flash.Store(&this.Controller)
+		return
+	}
+
+	this.storeUser(&newUser)
+	beego.NewFlash().Success("登录成功，欢迎再次回来。")
+	this.Redirect("/")
+}
+
+func (this *Accounts) Logout() {
+	flash := beego.NewFlash()
+	this.clearUser()
+	flash.Success("登出成功")
+	flash.Store(&this.Controller)
+	this.Redirect("/")
+}
+
+func (this *Accounts) Edit() {
+	this.Data["title"] = "个人设置"
+	this.Data["controller_name"] = "Topic"
+	this.Data["method_name"] = "edit"
+	this.TplName = "accounts/edit.html"
+}
+
+func (this *Accounts) Update() {
+	this.currentUser.Email = this.GetString("email")
+	this.currentUser.GitHub = this.GetString("github")
+	this.currentUser.Twitter = this.GetString("twitter")
+	this.currentUser.Tagline = this.GetString("tagline")
+	this.currentUser.Location = this.GetString("location")
+	this.currentUser.Description = this.GetString("description")
+	var u models.User
+	u = this.currentUser
+	_, v := models.UpdateUserProfile(u)
+	if v.HasErrors() {
+		//return this.renderValidation("accounts/edit.html", v)
+		return
+	}
+
+	beego.NewFlash().Success("个人信息修改成功")
+	this.Redirect("/account/edit")
+}
+
+func (this *Accounts) Password() {
+	this.Data["title"] = "个人设置"
+	this.Data["controller_name"] = "Topic"
+	this.Data["method_name"] = "password"
+	this.TplName = "accounts/password.html"
+}
+
+func (this *Accounts) UpdatePassword() {
+	v := this.currentUser.UpdatePassword(this.GetString("password"), this.GetString("new-password"), this.GetString("confirm-password"))
+	if v.HasErrors() {
+		//return this.renderValidation("accounts/password.html", v)
+		return
+	}
+	beego.NewFlash().Success("密码修改成功")
+	this.Redirect("/account/password")
+}

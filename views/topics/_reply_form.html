@@ -1,0 +1,15 @@
+<div id="reply" class="panel panel-default">
+	<div class="panel-heading">回帖</div>
+	<form class="reply-form panel-body"
+	  action="/topics/{{.topic.Id}}/reply" method="POST"
+	 >
+	  {{.validation | error_messages}}
+	  <input type="hidden" name="csrf_token" value="{{.csrf_token}}" />
+	  <div class="form-group">
+	    <textarea class="form-control" name="body" rows="5" placeholder="在这里输入回帖内容">{{.reply.Body}}</textarea>
+	  </div>
+		<div class="actions">
+	  		<button type="submit" class="btn btn-primary btn-block">回复</button>
+		</div>
+	</form>
+</div>

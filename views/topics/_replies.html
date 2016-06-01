@@ -1,0 +1,36 @@
+<div id="replies" class="panel panel-default">
+	<div class="panel-heading">共 {{.topic.RepliesCount}} 条回复</div>
+	<div class="panel-body">
+	{{if .replies}}
+		{{range $idx, $reply := .replies}}
+		<div id="reply{{plus $idx 1}}" class="media reply{{if $reply.IsDeleted}} deleted{{end}}">
+			{{if $reply.IsDeleted}}
+			<div class="media-body">回复已删除</div>
+			{{else}}
+				<div class="avatar media-left">
+					{{user_avatar_tag $reply.User "96x96"}}
+				</div>
+				<div class="media-body">
+					<div class="info">
+						{{user_name_tag $reply.User}} at {{timeago $reply.CreatedAt}}
+						<div class="pull-right opts">
+							{{if is_owner $.current_user $reply}}
+					      <a href="/replies/{{.Id}}/edit"><i class="fa fa-pencil"></i></a>
+								<a href="/replies/{{.Id}}/delete" data-confirm="确定要删除这个回帖么？" data-method="post"><i class="fa fa-trash-o"></i></a>
+					    {{end}}
+							<a href="#" class="btn-reply fa fa-mail-reply" data-floor="{{plus $idx 1}}" data-login="{{$reply.User.Login}}" title="回复"></a>
+						</div>
+					</div>
+					<div class="markdown">
+						{{markdown $reply.Body}}
+					</div>
+				</div>
+			{{end}}
+		</div>
+		{{end}}
+	{{else}}
+		<div class="reply none">暂时还没有人回帖哦，赶紧抢先</div>
+	{{end}}
+	</div>
+</div>
+{{template "topics/_reply_form.html" .}}
