@@ -2,17 +2,16 @@ package models
 
 import (
 	"errors"
+	"time"
+
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/validation"
-	"time"
 )
 
 type Reply struct {
 	Id        int32     `orm:"pk;auto"`
-	UserId    int32     ``
-	User      User      `orm:"-"`
-	TopicId   int32     ``
-	Topic     *Topic    `orm:"-"`
+	User      *User     `orm:"rel(fk)"`
+	Topic     *Topic    `orm:"rel(fk)"`
 	Body      string    `orm:"type:text;"`
 	IsDeleted bool      ``
 	CreatedAt time.Time `orm:"auto_now_add;type(datetime)"`
@@ -32,10 +31,10 @@ func (r *Reply) validate() validation.Validation {
 	switch r.NewRecord() {
 	case false:
 	default:
-		v.Required(r.TopicId, "topic_id").Message("不能为空")
-		v.Min(int(r.TopicId), 1, "topic_id").Message("不能为空")
-		v.Required(r.UserId, "user_id").Message("不能为空")
-		v.Min(int(r.UserId), 1, "user_id").Message("不能为空")
+		v.Required(r.Topic.Id, "topic_id").Message("不能为空")
+		v.Min(int(r.Topic.Id), 1, "topic_id").Message("不能为空")
+		v.Required(r.User.Id, "user_id").Message("不能为空")
+		v.Min(int(r.User.Id), 1, "user_id").Message("不能为空")
 		v.MinSize(r.Body, 1, "内容").Message("不能为空")
 		v.MaxSize(r.Body, 10000, "内容").Message("最多不允许超过 10000 个子符")
 	}
@@ -74,8 +73,9 @@ func GetReplyById(id int32) (reply Reply, err error) {
 	return
 }
 
+//获取文章的所有评论
 func GetReplyByTopicId(id int32) (reply []Reply, err error) {
-	_, err = orm.NewOrm().QueryTable(TableName("reply")).Filter("topic_id", id).OrderBy("id").All(&reply)
+	_, err = orm.NewOrm().QueryTable(TableName("reply")).Filter("topic_id", id).RelatedSel().OrderBy("id").All(&reply)
 	return
 }
 

@@ -50,7 +50,7 @@ func Init() {
 		connStr = connStr + "&loc=" + url.QueryEscape(timezone)
 	}
 	if beego.AppConfig.String("runmode") == "dev" {
-		beego.Info("ormDebug:%v", orm.Debug)
+		beego.Info("ormDebug:", orm.Debug)
 	}
 	orm.Debug = true
 	orm.RegisterDriver("mysql", orm.DRMySQL)

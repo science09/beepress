@@ -124,17 +124,17 @@ func (this *BaseController) isOwner(obj interface{}) bool {
 	objType := reflect.TypeOf(obj)
 	switch objType.String() {
 	case "models.Topic":
-		return this.currentUser.Id == obj.(models.Topic).UserId
+		return this.currentUser.Id == obj.(models.Topic).User.Id
 	case "*models.Topic":
-		return this.currentUser.Id == obj.(*models.Topic).UserId
+		return this.currentUser.Id == obj.(*models.Topic).User.Id
 	case "models.User":
 		return this.currentUser.Id == obj.(models.User).Id
 	case "*models.User":
 		return this.currentUser.Id == obj.(*models.User).Id
 	case "models.Reply":
-		return this.currentUser.Id == obj.(models.Reply).UserId
+		return this.currentUser.Id == obj.(models.Reply).User.Id
 	case "*models.Reply":
-		return this.currentUser.Id == obj.(*models.Reply).UserId
+		return this.currentUser.Id == obj.(*models.Reply).User.Id
 	default:
 		panic(fmt.Sprintf("Invalid isOwner type: %v, %v, name: %v", obj, objType, objType.Name()))
 	}

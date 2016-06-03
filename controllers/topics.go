@@ -99,13 +99,14 @@ func (this *Topics) Create() {
 	flash := beego.NewFlash()
 	this.Ctx.Input.Bind(&nodeId, "node_id")
 	beego.Info("Topic Create:", nodeId, this.GetString("node_id"))
+	node, _ := models.GetNodeById(int32(nodeId))
 	t := &models.Topic{
-		Title:  this.GetString("title"),
-		Body:   this.GetString("body"),
-		NodeId: nodeId,
+		Title: this.GetString("title"),
+		Body:  this.GetString("body"),
+		Node:  &node,
 	}
 
-	t.UserId = this.currentUser.Id
+	t.User = &this.currentUser
 	err := models.CreateTopic(t)
 	if err != nil {
 		this.Data["topic"] = t
@@ -120,19 +121,19 @@ func (this *Topics) Create() {
 
 func (this *Topics) Show() {
 	topicId, _ := strconv.Atoi(this.Ctx.Input.Param(":id"))
-	t, err := models.GetTopicById(int32(topicId))
+	topic, err := models.GetTopicById(int32(topicId))
 	if err != nil {
 		beego.Info(err)
 		this.Abort("404")
 	}
-	replies, err := models.GetReplyByTopicId(t.Id)
+	replies, err := models.GetReplyByTopicId(topic.Id)
 	if err != nil {
 		beego.Info(err)
 		this.Abort("404")
 	}
-
-	this.Data["topic"] = t
-	this.Data["title"] = t.Title
+	topic.RepliesCount = int32(len(replies))
+	this.Data["topic"] = topic
+	this.Data["title"] = topic.Title
 	this.Data["replies"] = replies
 	this.TplName = "topics/show.html"
 }
@@ -152,13 +153,15 @@ func (this *Topics) Edit() {
 
 func (this *Topics) Update() {
 	this.requireUser()
-	t, _ := models.GetTopicById(help.StrToInt32(this.GetString("id")))
+	t, _ := models.GetTopicById(help.StrToInt32(this.Ctx.Input.Param(":id")))
+	beego.Info("topic:===", t)
 	if !this.isOwner(t) {
 		beego.NewFlash().Error("没有修改的权限")
 		this.Redirect("/")
 	}
 	nodeId, _ := strconv.Atoi(this.GetString("node_id"))
-	t.NodeId = int32(nodeId)
+	node, _ := models.GetNodeById(int32(nodeId))
+	t.Node = &node
 	t.Title = this.GetString("title")
 	t.Body = this.GetString("body")
 	v := models.UpdateTopic(&t)
@@ -173,7 +176,7 @@ func (this *Topics) Update() {
 
 func (this *Topics) Delete() {
 	this.requireUser()
-	t, _ := models.GetTopicById(help.StrToInt32(this.GetString("id")))
+	t, _ := models.GetTopicById(help.StrToInt32(this.Ctx.Input.Param(":id")))
 	if !this.isOwner(t) {
 		beego.NewFlash().Error("没有修改的权限")
 		this.Redirect("/")
@@ -189,7 +192,7 @@ func (this *Topics) Delete() {
 
 func (this *Topics) Watch() {
 	this.requireUserForJSON()
-	t, _ := models.GetTopicById(help.StrToInt32(this.GetString("id")))
+	t, _ := models.GetTopicById(help.StrToInt32(this.Ctx.Input.Param(":id")))
 	this.currentUser.Watch(t)
 	//return this.successJSON(t.WatchesCount + 1)
 }
@@ -198,7 +201,7 @@ func (this *Topics) UnWatch() {
 	this.requireUserForJSON()
 	//t := Topic{}
 	//DB.First(&t, this.GetString("id"))
-	t, _ := models.GetTopicById(help.StrToInt32(this.GetString("id")))
+	t, _ := models.GetTopicById(help.StrToInt32(this.Ctx.Input.Param(":id")))
 	this.currentUser.UnWatch(t)
 	//return this.successJSON(t.WatchesCount - 1)
 	return
@@ -208,7 +211,7 @@ func (this *Topics) Star() {
 	this.requireUserForJSON()
 	//t := Topic{}
 	//DB.First(&t, this.GetString("id"))
-	t, _ := models.GetTopicById(help.StrToInt32(this.GetString("id")))
+	t, _ := models.GetTopicById(help.StrToInt32(this.Ctx.Input.Param(":id")))
 	this.currentUser.Star(t)
 	//return this.successJSON(t.StarsCount + 1)
 	return
@@ -216,9 +219,7 @@ func (this *Topics) Star() {
 
 func (this *Topics) UnStar() {
 	this.requireUserForJSON()
-	//t := Topic{}
-	//DB.First(&t, this.GetString("id"))
-	t, _ := models.GetTopicById(help.StrToInt32(this.GetString("id")))
+	t, _ := models.GetTopicById(help.StrToInt32(this.Ctx.Input.Param(":id")))
 	this.currentUser.UnStar(t)
 	//return this.successJSON(t.StarsCount - 1)
 	return
@@ -237,7 +238,7 @@ func (this *Topics) Rank() {
 		rankVal = models.RankNormal
 	}
 
-	t, _ := models.GetTopicById(help.StrToInt32(this.GetString("id")))
+	t, _ := models.GetTopicById(help.StrToInt32(this.Ctx.Input.Param(":id")))
 	err := t.UpdateRank(rankVal)
 	if err != nil {
 		return

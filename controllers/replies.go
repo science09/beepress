@@ -28,8 +28,8 @@ func (this *Replies) Create() {
 		return
 	}
 
-	reply.TopicId = this.topic.Id
-	reply.UserId = this.currentUser.Id
+	reply.Topic = &this.topic
+	reply.User = &this.currentUser
 	err = models.CreateReply(reply)
 	if err != nil {
 		flash.Error("回帖失败")
@@ -65,7 +65,7 @@ func (this *Replies) Update() {
 		flash.Store(&this.Controller)
 		return
 	}
-	this.Redirect(fmt.Sprintf("/topics/%v", reply.TopicId))
+	this.Redirect(fmt.Sprintf("/topics/%v", reply.Topic.Id))
 }
 
 //修改评论
@@ -111,5 +111,5 @@ func (this *Replies) Delete() {
 		flash.Success("回帖删除成功")
 	}
 	flash.Store(&this.Controller)
-	this.Redirect(fmt.Sprintf("/topics/%v", reply.TopicId))
+	this.Redirect(fmt.Sprintf("/topics/%v", reply.Topic.Id))
 }

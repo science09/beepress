@@ -70,10 +70,10 @@ func is_owner(u models.User, obj interface{}) bool {
 		return u1.Id == u.Id
 	case models.Topic:
 		t := obj.(models.Topic)
-		return u.Id == t.UserId
+		return u.Id == t.User.Id
 	case models.Reply:
 		r := obj.(models.Reply)
-		return u.Id == r.UserId
+		return u.Id == r.User.Id
 	}
 
 	return false
@@ -138,15 +138,15 @@ func MarkDown(text string) interface{} {
 func user_name_tag(obj interface{}) interface{} {
 	out := "未知用户"
 	switch obj.(type) {
-	case models.User:
-		u := obj.(models.User)
+	case *models.User:
+		u := obj.(*models.User)
 		if u.NewRecord() {
 			return out
 		}
-		out = fmt.Sprintf("<a href='/%v' class='uname'>%v</a>", template.HTMLEscapeString(u.Login), template.HTMLEscapeString(u.Login))
+		out = fmt.Sprintf("<a href='/user/%v' class='uname'>%v</a>", template.HTMLEscapeString(u.Login), template.HTMLEscapeString(u.Login))
 	default:
 		login := fmt.Sprintf("%v", obj)
-		out = fmt.Sprintf(`<a href="/%v" class="uname">%v</a>`, template.HTMLEscapeString(login), template.HTMLEscapeString(login))
+		out = fmt.Sprintf(`<a href="/user/%v" class="uname">%v</a>`, template.HTMLEscapeString(login), template.HTMLEscapeString(login))
 
 	}
 
@@ -156,7 +156,7 @@ func user_name_tag(obj interface{}) interface{} {
 func user_avatar_tag(obj interface{}, size string) interface{} {
 	out := ""
 	if obj != nil {
-		u := (obj).(models.User)
+		u := (obj).(*models.User)
 		if u.NewRecord() {
 			return out
 		}
@@ -172,6 +172,12 @@ func node_name_tag(obj interface{}) interface{} {
 	switch obj.(type) {
 	case models.Node:
 		n := obj.(models.Node)
+		if n.NewRecord() {
+			return out
+		}
+		out = fmt.Sprintf("<a href='/topics/node/%v' class='node-name'>%v</a>", n.Id, template.HTMLEscapeString(n.Name))
+	case *models.Node:
+		n := obj.(*models.Node)
 		if n.NewRecord() {
 			return out
 		}
@@ -273,7 +279,6 @@ func node_list() interface{} {
 	subs := []string{}
 	outs = append(outs, `<div class="row node-list">`)
 	for _, group := range groups {
-		beego.Info("ddddd", group.Name)
 		subs = []string{
 			`<div class="node media clearfix">`,
 			fmt.Sprintf(`<label class="media-left">%v</label>`, group.Name),

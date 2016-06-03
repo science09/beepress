@@ -54,7 +54,7 @@ func (n *Notification) NotifyableTitle() string {
 		//t := Topic{}
 		//db.First(&t, n.Reply().TopicId)
 		r, _ := n.Reply()
-		t, _ := GetTopicById(r.TopicId)
+		t, _ := GetTopicById(r.Topic.Id)
 		return t.Title
 	default:
 		return ""
@@ -67,7 +67,7 @@ func (n *Notification) NotifyableURL() string {
 		return fmt.Sprintf("/topics/%v", n.NotifyableId)
 	case "Reply":
 		r, _ := n.Reply()
-		return fmt.Sprintf("/topics/%v", r.TopicId)
+		return fmt.Sprintf("/topics/%v", r.Topic.Id)
 	default:
 		return ""
 	}
@@ -106,23 +106,23 @@ func (r *Reply) NotifyReply() error {
 	//t := Topic{}
 	//
 	//err := db.Find(&t, r.TopicId).Error
-	t, err := GetTopicById(r.TopicId)
+	t, err := GetTopicById(r.Topic.Id)
 	if err != nil {
 		return nil
 	}
 
-	if t.UserId != r.UserId {
+	if t.User.Id != r.User.Id {
 		// 跳过回复人
-		go createNotification("Reply", t.UserId, r.UserId, "Reply", r.Id)
+		go createNotification("Reply", t.User.Id, r.User.Id, "Reply", r.Id)
 	}
 
 	followerIds := t.FollowerIds()
 	for _, followerId := range followerIds {
-		if followerId == r.UserId || followerId == t.UserId {
+		if followerId == r.User.Id || followerId == t.User.Id {
 			// 跳过回复人和发帖人
 			continue
 		}
-		go createNotification("Reply", followerId, r.UserId, "Reply", r.Id)
+		go createNotification("Reply", followerId, r.User.Id, "Reply", r.Id)
 	}
 
 	return nil

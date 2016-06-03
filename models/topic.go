@@ -3,28 +3,29 @@ package models
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/validation"
-	"time"
 )
 
+//UserId             int32 ``
+//NodeId             int32 ``
+//LastReplyUserId    int32     ``
 type Topic struct {
-	Id                 int32 `orm:"pk;auto"`
-	UserId             int32
-	User               User `orm:"-"`
-	NodeId             int32
-	Node               *Node `orm:"-"`
-	Title              string
+	Id                 int32     `orm:"pk;auto"`
+	User               *User     `orm:"rel(fk)"`
+	Node               *Node     `orm:"rel(fk)"`
+	Title              string    ``
 	Body               string    `orm:"type(text)"`
-	Replies            []*Reply  `orm:"-"`
+	Replies            []*Reply  `orm:"reverse(many)"`
 	RepliesCount       int32     `orm:"default(0)"`
 	LastActiveMark     int64     `orm:"default(0)"`
 	LastRepliedAt      time.Time `orm:"type(datetime);null"`
-	LastReplyId        int32
-	LastReplyUserId    int32
-	LastReplyUser      *User `orm:"-"`
-	LastReplyUserLogin string
+	LastReplyId        int32     ``
+	LastReplyUser      *User     `orm:"-"`
+	LastReplyUserLogin string    ``
 	StarsCount         int32     `orm:"default(0)"`
 	WatchesCount       int32     `orm:"default(0)"`
 	Rank               int32     `orm:"default(0)"`
@@ -50,9 +51,14 @@ func GetTopicCount() (count int32) {
 }
 
 func GetTopicById(id int32) (topic Topic, err error) {
-	err = orm.NewOrm().QueryTable(TableName("topic")).Filter("id", id).One(&topic)
-	u, _ := GetUserById(int(topic.UserId))
-	topic.User = *u
+	//err = orm.NewOrm().QueryTable(TableName("topic")).Filter("id", id).One(&topic)
+	//topic.User, _ = GetUserById(int(topic.User.Id))
+	err = orm.NewOrm().QueryTable(TableName("topic")).Filter("id", id).RelatedSel().One(&topic)
+	if err != nil {
+		beego.Error(err, id)
+	} else  {
+		beego.Info("tpp===", topic)
+	}
 	return
 }
 
@@ -61,31 +67,38 @@ func GetTopicByUserId(user_id int32) (topic []Topic, err error) {
 	return
 }
 
-func FindTopicPages(channel string, nodeId, page, perPage int) (topics []Topic, pageInfo Pagination) {
+//获取最近的10篇文章
+func GetRecentTopics(user_id int32) (topic []Topic, err error) {
+	_, err = orm.NewOrm().QueryTable(TableName("topic")).Filter("user_id", user_id).Limit(10).All(&topic)
+	return
+}
+
+func FindTopicPages(channel string, nodeId, page, perPage int) (topics []*Topic, pageInfo Pagination) {
 	pageInfo = Pagination{}
-	//pageInfo.Query = db.Model(&Topic{}).Preload("User").Preload("Node")
-	//
-	qs := orm.NewOrm().QueryTable(TableName("topic"))
+	o := orm.NewOrm()
+	qs := o.QueryTable(TableName("topic"))
 	switch channel {
 	case "recent":
-		//pageInfo.Query = pageInfo.Query.Order("id desc")
-		qs.OrderBy("-id").All(&topics)
+		qs.OrderBy("-id").RelatedSel().All(&topics)
 	case "popular":
 		cond := orm.NewCondition().And("rank", 1).Or("stars_count__gte", 5)
-		qs.SetCond(cond).All(&topics)
+		qs.SetCond(cond).RelatedSel().All(&topics)
 
 		//pageInfo.Query = pageInfo.Query.Where("rank = 1 or stars_count >= 5")
 		//pageInfo.Query = pageInfo.Query.Order("last_active_mark desc, id desc")
 	case "node":
-		qs.Filter("node_id", nodeId).OrderBy("-last_active_mark", "-id").All(&topics)
+		qs.Filter("node_id", nodeId).OrderBy("-last_active_mark", "-id").RelatedSel().All(&topics)
 		//pageInfo.Query = pageInfo.Query.Where("node_id = ?", nodeId)
 		//pageInfo.Query = pageInfo.Query.Order("last_active_mark desc, id desc")
 	default:
-		qs.OrderBy("-last_active_mark", "-id").All(&topics)
-		for _, v := range topics {
-			v.User.Login = "admin"
-		}
+		qs.OrderBy("-last_active_mark", "-id").RelatedSel().All(&topics)
 		//pageInfo.Query = pageInfo.Query.Where("rank >= 0").Order("last_active_mark desc, id desc")
+	}
+
+	for _, val := range topics {
+		count, _ := o.QueryTable("t_reply").Filter("topic_id", val.Id).Count()
+		val.RepliesCount = int32(count)
+		beego.Info("count:", val.RepliesCount,val.Replies)
 	}
 	//pageInfo.Path = "/topics"
 	//pageInfo.PerPage = perPage
@@ -110,8 +123,7 @@ func UpdateTopic(t *Topic) validation.Validation {
 	if v.HasErrors() {
 		return v
 	}
-
-	_, err := orm.NewOrm().Insert(t)
+	_, err := orm.NewOrm().Update(t)
 	if err != nil {
 		v.Error("服务器异常更新失败")
 	}

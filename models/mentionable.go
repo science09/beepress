@@ -36,10 +36,10 @@ func (r *Reply) CheckMention() {
 	}
 	mentionUserIds := searchMentionUserIds(r.Body)
 	for _, userId := range mentionUserIds {
-		if userId == r.UserId {
+		if userId == r.User.Id {
 			continue
 		}
-		NotifyMention(userId, r.UserId, "Reply", r.Id)
+		NotifyMention(userId, r.User.Id, "Reply", r.Id)
 	}
 }
 
@@ -49,10 +49,10 @@ func (t *Topic) CheckMention() {
 	}
 	mentionUserIds := searchMentionUserIds(t.Body)
 	for _, userId := range mentionUserIds {
-		if userId == t.UserId {
+		if userId == t.User.Id {
 			continue
 		}
 
-		NotifyMention(userId, t.UserId, "Topic", t.Id)
+		NotifyMention(userId, t.User.Id, "Topic", t.Id)
 	}
 }

@@ -4,6 +4,8 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"math/rand"
+	"os"
 	"strings"
 	"time"
 
@@ -12,7 +14,13 @@ import (
 	"github.com/astaxie/beego/validation"
 )
 
-var ADMIN_LOGINS = []string{"admin"}
+var (
+	filePath     = "/static/avatar/"
+	suffix       = ".svg"
+	ADMIN_LOGINS = []string{"admin"}
+	bgColor      = []string{"#aa4325", "#e84e40", "#C41411", "#ad1457", "#673ab7", "#5677FC",
+		"#7e57C2", "#7986CB", "#03A9F4", "#00BCD4", "#009688", "#795548", "#ff6e40", "#607d8B"}
+)
 
 type User struct {
 	Id          int32     `orm:"pk;auto"`
@@ -44,9 +52,39 @@ func (u User) BeforeCreate() error {
 
 //生成图片路径
 func (u User) GavatarURL(size string) string {
-	//emailMD5 := u.EncodePassword(u.Email)
-	//return fmt.Sprintf("https://ruby-china.org/avatar/%v?s=%v", emailMD5, size)
-	return "/static/img/avatar/user.png"
+	emailMD5 := u.EncodePassword(u.Login)
+	file := emailMD5 + ".svg"
+	return fmt.Sprintf("%s%v?s=%v", filePath, file, size)
+}
+
+func GetRand() int {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return r.Int()
+}
+
+func GenerateAvatar(name string) error {
+	strByte := []byte(name)
+	u := User{Login: name}
+	fileName := u.EncodePassword(name) + suffix
+	fmt.Println("==bgcolor:", GetRand()%len(bgColor))
+	bg := bgColor[GetRand()%len(bgColor)]
+	dir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	file := dir + filePath + fileName
+	f, err := os.Create(file)
+	defer f.Close()
+	if err != nil {
+		return err
+	}
+	svg := fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240">
+  <rect x="0" y="0" width="240" height="240" rx="6" ry="6" fill="%s" />
+  <text fill="white" x="120" y="120" font-size="160" font-weight="bold" text-anchor="middle" style="dominant-baseline: central;">%s</text>
+</svg>`, bg, strings.ToUpper(string(strByte[0])))
+	f.WriteString(svg)
+
+	return err
 }
 
 func (u User) NotifyChannelId() string {
@@ -140,7 +178,7 @@ func (u User) Signup(login string, email string, password string, passwordConfir
 	if v.HasErrors() {
 		return u, v
 	}
-
+	GenerateAvatar(u.Login)
 	u.Password = u.EncodePassword(password)
 	_, err := orm.NewOrm().Insert(&u)
 	if err != nil {
@@ -211,15 +249,17 @@ func (u User) UpdatePassword(oldPassword, newPassword, confirmPassword string) (
 	return v
 }
 
-func FindUserByLogin(login string) (u User, err error) {
-	err = orm.NewOrm().QueryTable(TableName("user")).Filter("login", strings.ToLower(login)).One(&u)
+func FindUserByLogin(login string) (u *User, err error) {
+	user := &User{}
+	err = orm.NewOrm().QueryTable(TableName("user")).Filter("login", strings.ToLower(login)).One(user)
+	u = user
 	return
 }
 
 func GetUserById(id int) (u *User, err error) {
-	user := User{}
-	err = orm.NewOrm().QueryTable(TableName("user")).Filter("id", id).One(&user)
-	u = &user
+	user := &User{}
+	err = orm.NewOrm().QueryTable(TableName("user")).Filter("id", id).One(user)
+	u = user
 	return
 }
 
