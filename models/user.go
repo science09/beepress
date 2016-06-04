@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"errors"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/validation"
@@ -66,7 +67,6 @@ func GenerateAvatar(name string) error {
 	strByte := []byte(name)
 	u := User{Login: name}
 	fileName := u.EncodePassword(name) + suffix
-	fmt.Println("==bgcolor:", GetRand()%len(bgColor))
 	bg := bgColor[GetRand()%len(bgColor)]
 	dir, err := os.Getwd()
 	if err != nil {
@@ -155,37 +155,42 @@ func (u User) EncodePassword(raw string) (md5Digest string) {
 	return
 }
 
-func (u User) Signup(login string, email string, password string, passwordConfirm string) (user User, v validation.Validation) {
+func (u User) Signup(login string, email string, password string, passwordConfirm string) (user User, err error) {
 	u.Login = strings.ToLower(strings.Trim(login, " "))
 	u.Email = strings.ToLower(strings.Trim(email, " "))
-	v = validation.Validation{}
-	v.Required(email, "Email").Message("不能为空")
-	v.MinSize(login, 5, "用户名").Message("最少要 5 个字符")
-	v.MinSize(password, 6, "密码").Message("最少要 6 个字符")
+	v := validation.Validation{}
+	v.MinSize(login, 5, "用户名").Message("用户名最少要 5 个字符")
+	v.Required(email, "Email").Message("Email不能为空")
+	v.MinSize(password, 6, "密码").Message("密码最少要 6 个字符")
 	v.Email(email, "Email").Message("格式不正确")
 
 	if password != passwordConfirm {
 		v.Error("密码与确认密码不一致")
+	}
+	if v.HasErrors() {
+		for _, val := range v.Errors {
+			err = errors.New(val.Message)
+			return u, err
+		}
 	}
 
 	var existCount int64
 	existCount, _ = orm.NewOrm().QueryTable(TableName("user")).Filter("login", login).Count()
 	fmt.Println("login name as: ", login, " have ", existCount)
 	if existCount > 0 {
-		v.SetError("user", "帐号已经被注册")
+		err := errors.New("帐号已经被注册")
+		return u, err
 	}
 
-	if v.HasErrors() {
-		return u, v
-	}
 	GenerateAvatar(u.Login)
 	u.Password = u.EncodePassword(password)
-	_, err := orm.NewOrm().Insert(&u)
+	_, err = orm.NewOrm().Insert(&u)
 	if err != nil {
-		v.Error(fmt.Sprintf("服务器异常, %v", err))
+		msg := fmt.Sprintf("服务器异常, %v", err)
+		err = errors.New(msg)
 	}
 	beego.Info("created user: ", u)
-	return u, v
+	return u, err
 }
 
 func (u User) Signin(login string, password string) (user User, v validation.Validation) {
@@ -195,58 +200,61 @@ func (u User) Signin(login string, password string) (user User, v validation.Val
 	}
 	err := orm.NewOrm().QueryTable(u).Filter("login", login).Filter("password", u.EncodePassword(password)).One(&user)
 	if err != nil {
-		beego.Error(err.Error())
-		v.Error("帐号密码不正确")
+		v.Error("帐号或密码不正确")
 	}
 	return user, v
 }
 
-func UpdateUserProfile(u User) (user User, v validation.Validation) {
+func UpdateUserProfile(u *User) (user User, err error) {
+	v := validation.Validation{}
+	v.Required(u.Login, "login").Message("用户名不能为空")
 	v.Required(u.Email, "email").Message("格式不正确")
-	//v.Email(u.Email).Key("Email").Message("格式不正确")
 	if v.HasErrors() {
-		return u, v
+		for _, val := range v.Errors {
+			err = errors.New(val.Message)
+		}
+		return *u, err
 	}
-	willUpdateUser := User{
-		Email:       u.Email,
-		Location:    u.Location,
-		Description: u.Description,
-		GitHub:      u.GitHub,
-		Twitter:     u.Twitter,
-		Tagline:     u.Tagline,
-	}
-	//err := db.First(&u, u.Id).Updates(willUpdateUser).Error
-	_, err := orm.NewOrm().Update(&willUpdateUser)
+	//willUpdateUser := User{
+	//	Email:       u.Email,
+	//	Location:    u.Location,
+	//	Description: u.Description,
+	//	GitHub:      u.GitHub,
+	//	Twitter:     u.Twitter,
+	//	Tagline:     u.Tagline,
+	//}
+	_, err = orm.NewOrm().Update(u)
 	if err != nil {
-		v.Error(err.Error())
+		err = errors.New("服务器更新失败")
 	}
-	return u, v
+	return *u, err
 }
 
-func (u User) UpdatePassword(oldPassword, newPassword, confirmPassword string) (v validation.Validation) {
-	user := User{}
-	//v.Required(oldPassword).Key("旧密码").Message("不能为空")
-	v.Required(oldPassword, "旧密码").Message("不能为空")
-	//db.First(&user, "id = ? and password = ?", u.Id, u.EncodePassword(oldPassword))
-	orm.NewOrm().Read(&user)
-	if user.NewRecord() {
+func (u User) UpdatePassword(oldPassword, newPassword, confirmPassword string) error {
+	v := validation.Validation{}
+	v.Required(oldPassword, "旧密码").Message("旧密码不能为空")
+	orm.NewOrm().Read(&u)
+	if u.NewRecord() {
 		v.Error("旧密码不正确")
 	}
-	//v.MinSize(newPassword, 6).Key("新密码").Message("最少要 6 个子符")
-	v.MinSize(newPassword, 6, "新密码").Message("最少要 6 个子符")
+	v.MinSize(newPassword, 6, "新密码").Message("新密码最少要 6 个子符")
 	if newPassword != confirmPassword {
 		v.Error("新密码与确认新密码输入的内容不一致")
 	}
+	if newPassword == oldPassword {
+		v.Error("新密码不能和旧密码一致")
+	}
 	if v.HasErrors() {
-		return v
+		for _, err := range v.Errors {
+			return errors.New(err.Message)
+		}
 	}
-
-	//err := db.Model(u).Update("password", u.EncodePassword(newPassword)).Error
-	_, err := orm.NewOrm().Update(&user, "password")
+	u.Password = u.EncodePassword(newPassword)
+	_, err := orm.NewOrm().Update(&u, "password")
 	if err != nil {
-		v.Error(err.Error())
+		err = errors.New("更新密码失败")
 	}
-	return v
+	return err
 }
 
 func FindUserByLogin(login string) (u *User, err error) {
@@ -263,11 +271,18 @@ func GetUserById(id int) (u *User, err error) {
 	return
 }
 
+func GetUserCount() int {
+	count, err := orm.NewOrm().QueryTable(TableName("user")).Count()
+	if err != nil {
+		return 0
+	}
+	return int(count)
+}
+
 func UsersCountCached() (count int) {
 	if !Cache.IsExist("users/total") {
-		if count, err := orm.NewOrm().QueryTable(TableName("user")).Count(); err == nil {
-			go Cache.Put("users/total", int(count), 30*time.Minute)
-		}
+		count = GetUserCount()
+		go Cache.Put("users/total", count, 30*time.Minute)
 	} else {
 		count = (Cache.Get("users/total")).(int)
 	}

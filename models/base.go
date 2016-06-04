@@ -66,6 +66,7 @@ func Init() {
 
 	InitNodeGroup()
 
+
 	//db.LogMode(false)
 	//logger = Logger{log.New(os.Stdout, "  ", 0)}
 	//db.SetLogger(logger)

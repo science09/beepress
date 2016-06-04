@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/orm"
-
 )
 
 type Setting struct {
@@ -22,6 +21,17 @@ func (s *Setting) AfterSave() {
 	s.RewriteCache()
 }
 
+func InsertSetting(s Setting) error {
+	_, err := orm.NewOrm().Insert(&s)
+	return err
+}
+
+func GetSettings() ([]*Setting, error) {
+	var settings []*Setting
+	_, err := orm.NewOrm().QueryTable(TableName("setting")).OrderBy("-Key").All(&settings)
+	return settings, err
+}
+
 func settingCacheKey(key string) string {
 	return fmt.Sprintf("setting/%v/v1", key)
 }
@@ -32,7 +42,6 @@ func (s *Setting) RewriteCache() {
 
 func FindSettingByKey(key string) (s Setting) {
 	s.Key = key
-	//DB.Where("`key` = ?", key).First(&s)
 	orm.NewOrm().QueryTable(s.TableName()).Filter("key", key).One(&s)
 	return s
 }
@@ -41,24 +50,15 @@ func GetSetting(key string) (out string) {
 	out = ""
 	if Cache.IsExist(settingCacheKey(key)) {
 		out = Cache.Get(settingCacheKey(key)).(string)
-	}else {
+	} else {
 		s := FindSettingByKey(key)
 		if s.Id <= 0 {
 			//保存数据库
+			InsertSetting(s)
 		}
 		out = s.Val
 		s.RewriteCache()
 	}
-
-	//if err := Cache.Get(settingCacheKey(key), &out); err != nil {
-	//	s := FindSettingByKey(key)
-	//	if s.Id <= 0 {
-	//		//		db.Save(&s)
-	//	}
-	//
-	//	out = s.Val
-	//	s.RewriteCache()
-	//}
 
 	return
 }

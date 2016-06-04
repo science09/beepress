@@ -2,9 +2,10 @@ package controllers
 
 import (
 	"beepress/models"
+	"regexp"
+
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/validation"
-	"regexp"
 )
 
 //用户账户相关的控制器
@@ -17,8 +18,8 @@ var (
 )
 
 func (this *Accounts) NestPrepare() {
-	con, _ := this.GetControllerAndAction()
-	if regexRequireUserActions.MatchString(con) {
+	_, action := this.GetControllerAndAction()
+	if regexRequireUserActions.MatchString(action) {
 		this.requireUser()
 	}
 }
@@ -32,32 +33,30 @@ func (this *Accounts) New() {
 
 func (this *Accounts) Create() {
 	u := new(models.User)
-	newUser := models.User{}
-	v := validation.Validation{}
 	flash := beego.NewFlash()
 
 	this.Data["title"] = "注册新用户"
 	this.Data["controller_name"] = "Topic"
 	this.Layout = "layout/layout.html"
+	this.TplName = "accounts/new.html"
+
+	login := this.GetString("login")
+	email := this.GetString("email")
+	password := this.GetString("password")
+	rePassword := this.GetString("password-confirm")
 
 	if !this.validateCaptcha(this.GetString("captcha")) {
-		v.SetError("captcha", "验证码不正确")
 		flash.Error("验证码不正确")
 		flash.Store(&this.Controller)
-		this.TplName = "accounts/new.html"
 		return
 	}
 
-	newUser, v = u.Signup(this.GetString("login"), this.GetString("email"), this.GetString("password"), this.GetString("password-confirm"))
-	if v.HasErrors() {
-		for _, val := range v.Errors{
-			flash.Error(val.Message)
-		}
+	newUser, err := u.Signup(login, email, password, rePassword)
+	if err != nil {
+		flash.Error(err.Error())
 		flash.Store(&this.Controller)
-		this.TplName = "accounts/new.html"
 		return
 	}
-
 	this.storeUser(&newUser)
 	flash.Success("注册成功")
 	this.Redirect("/")
@@ -82,8 +81,8 @@ func (this *Accounts) LoginCreate() {
 	this.Layout = "layout/layout.html"
 	this.TplName = "accounts/login.html"
 
+	beego.Info(this.GetString("captcha"))
 	if !this.validateCaptcha(this.GetString("captcha")) {
-		v.SetError("captcha", "验证码不正确")
 		flash.Error("验证码不正确")
 		flash.Store(&this.Controller)
 		return
@@ -91,7 +90,7 @@ func (this *Accounts) LoginCreate() {
 
 	newUser, v = u.Signin(this.GetString("login"), this.GetString("password"))
 	if v.HasErrors() {
-		for _, val := range v.Errors{
+		for _, val := range v.Errors {
 			flash.Error(val.Message)
 		}
 		flash.Store(&this.Controller)
@@ -99,7 +98,8 @@ func (this *Accounts) LoginCreate() {
 	}
 
 	this.storeUser(&newUser)
-	beego.NewFlash().Success("登录成功，欢迎再次回来。")
+	flash.Success("登录成功，欢迎再次回来。")
+	flash.Store(&this.Controller)
 	this.Redirect("/")
 }
 
@@ -113,12 +113,15 @@ func (this *Accounts) Logout() {
 
 func (this *Accounts) Edit() {
 	this.Data["title"] = "个人设置"
-	this.Data["controller_name"] = "Topic"
 	this.Data["method_name"] = "edit"
 	this.TplName = "accounts/edit.html"
 }
 
 func (this *Accounts) Update() {
+	flash := beego.NewFlash()
+	this.Data["title"] = "个人设置"
+	this.Data["method_name"] = "edit"
+	this.TplName = "accounts/edit.html"
 	this.currentUser.Email = this.GetString("email")
 	this.currentUser.GitHub = this.GetString("github")
 	this.currentUser.Twitter = this.GetString("twitter")
@@ -127,29 +130,35 @@ func (this *Accounts) Update() {
 	this.currentUser.Description = this.GetString("description")
 	var u models.User
 	u = this.currentUser
-	_, v := models.UpdateUserProfile(u)
-	if v.HasErrors() {
-		//return this.renderValidation("accounts/edit.html", v)
+	_, err := models.UpdateUserProfile(&u)
+	if err != nil {
+		flash.Error(err.Error())
+		flash.Store(&this.Controller)
 		return
 	}
 
-	beego.NewFlash().Success("个人信息修改成功")
-	this.Redirect("/account/edit")
+	flash.Success("个人信息修改成功")
+	flash.Store(&this.Controller)
+	//this.Redirect("/account/edit")
 }
 
 func (this *Accounts) Password() {
 	this.Data["title"] = "个人设置"
-	this.Data["controller_name"] = "Topic"
 	this.Data["method_name"] = "password"
 	this.TplName = "accounts/password.html"
 }
 
 func (this *Accounts) UpdatePassword() {
-	v := this.currentUser.UpdatePassword(this.GetString("password"), this.GetString("new-password"), this.GetString("confirm-password"))
-	if v.HasErrors() {
-		//return this.renderValidation("accounts/password.html", v)
+	this.Data["method_name"] = "password"
+	this.TplName = "accounts/password.html"
+	flash := beego.NewFlash()
+	err := this.currentUser.UpdatePassword(this.GetString("password"), this.GetString("new-password"), this.GetString("confirm-password"))
+	if err != nil {
+		beego.Debug(err)
+		flash.Error(err.Error())
+		flash.Store(&this.Controller)
 		return
 	}
-	beego.NewFlash().Success("密码修改成功")
-	this.Redirect("/account/password")
+	flash.Success("密码修改成功")
+	flash.Store(&this.Controller)
 }

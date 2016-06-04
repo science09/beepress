@@ -303,7 +303,6 @@ func select_tag(objs interface{}, nameKey, valueKey, formName string, defaultVal
 	}
 
 	outs := []string{}
-
 	subs := []string{}
 	var nameField reflect.Value
 	var valueField reflect.Value

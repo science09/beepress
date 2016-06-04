@@ -4,6 +4,12 @@
             <div class="panel-heading">登录社区</div>
             <form class="signin panel-body" action="/signin" method="POST">
                 {{.validation | error_messages}}
+                {{if .flash.error}}
+                <div class="alert alert-warning">{{.flash.error}}</div>
+                {{end}}
+                {{if .flash.success}}
+                <div class="alert alert-success">{{.flash.success}}</div>
+                {{end}}
                 <input type="hidden" name="csrf_token" value="{{.csrf_token}}" />
                 <div class="form-group">
                   <input type="text" class="form-control" name="login" value="{{.params.login}}" id="username" placeholder="帐号">

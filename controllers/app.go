@@ -4,12 +4,13 @@ import (
 	"beepress/models"
 	"bytes"
 	"fmt"
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/validation"
-	"github.com/dchest/captcha"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/validation"
+	"github.com/dchest/captcha"
 )
 
 type NestPreparer interface {
@@ -34,8 +35,9 @@ func (this *BaseController) Prepare() {
 	this.Data["app_name"] = "bepress"
 	this.Layout = "layout/layout.html"
 	this.Data["controller_name"] = "Topic"
-	//this.Data["controller_name"] = inflections.Underscore(this.Name)
-	//this.Data["method_name"] = inflections.Underscore(this.MethodName)
+	controller, action := this.GetControllerAndAction()
+	this.Data["controller_name"] = controller //inflections.Underscore(this.Name)
+	this.Data["method_name"] = action         //inflections.Underscore(this.MethodName)
 	//this.Data["route_name"] = fmt.Sprintf("%v#%v", inflections.Underscore(this.Name), inflections.Underscore(this.MethodName))
 
 	if app, ok := this.AppController.(NestPreparer); ok {

@@ -57,10 +57,18 @@ func CreateReply(r *Reply) (err error) {
 	return
 }
 
+func GetReplyCount() int {
+	count, err := orm.NewOrm().QueryTable(TableName("reply")).Count()
+	if err != nil {
+		return 0
+	}
+	return int(count)
+}
+
 func RepliesCountCached() (count int) {
 	if !Cache.IsExist("replies/total") {
-		count, _ := orm.NewOrm().QueryTable(TableName("reply")).Count()
-		go Cache.Put("replies/total", int(count), 30*time.Minute)
+		count = GetReplyCount()
+		go Cache.Put("replies/total", count, 30*time.Minute)
 	} else {
 		count = Cache.Get("replies/total").(int)
 	}

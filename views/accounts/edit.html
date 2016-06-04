@@ -8,6 +8,8 @@
 			<div class="panel-body">
 				<form class="signup" action="/account" method="POST">
 					{{.validation | error_messages}}
+					{{if .flash.error}}<div class="alert alert-warning">{{.flash.error}}</div>{{end}}
+					{{if .flash.success}}<div class="alert alert-success">{{.flash.success}}</div>{{end}}
 					<input type="hidden" name="csrf_token" value="{{.csrf_token}}" />
 					<div class="form-group">
 						<label for="user-login">帐号</label>

@@ -44,9 +44,9 @@ func (t *Topic) TableName() string {
 	return TableName("topic")
 }
 
-func GetTopicCount() (count int32) {
+func GetTopicCount() (count int) {
 	total, _ := orm.NewOrm().QueryTable(TableName("topic")).Count()
-	count = int32(total)
+	count = int(total)
 	return
 }
 
@@ -56,7 +56,7 @@ func GetTopicById(id int32) (topic Topic, err error) {
 	err = orm.NewOrm().QueryTable(TableName("topic")).Filter("id", id).RelatedSel().One(&topic)
 	if err != nil {
 		beego.Error(err, id)
-	} else  {
+	} else {
 		beego.Info("tpp===", topic)
 	}
 	return
@@ -98,7 +98,7 @@ func FindTopicPages(channel string, nodeId, page, perPage int) (topics []*Topic,
 	for _, val := range topics {
 		count, _ := o.QueryTable("t_reply").Filter("topic_id", val.Id).Count()
 		val.RepliesCount = int32(count)
-		beego.Info("count:", val.RepliesCount,val.Replies)
+		beego.Info("count:", val.RepliesCount, val.Replies)
 	}
 	//pageInfo.Path = "/topics"
 	//pageInfo.PerPage = perPage
@@ -189,12 +189,12 @@ func (t *Topic) DeleteTopic() error {
 	return err
 }
 
-func TopicsCountCached() (count int32) {
+func TopicsCountCached() (count int) {
 	if !Cache.IsExist("topics/total") {
 		count = GetTopicCount()
 		go Cache.Put("topics/total", count, 30*time.Minute)
 	} else {
-		count = Cache.Get("topics/total").(int32)
+		count = Cache.Get("topics/total").(int)
 	}
 
 	return
