@@ -17,7 +17,7 @@ func (this *Topics) NestPrepare() {
 
 }
 
-func (this *Topics) Index( /*channel string*/ ) {
+func (this *Topics) Index() {
 	var page, nodeId int
 	channel := ""
 
@@ -80,7 +80,8 @@ func (this *Topics) Recent() {
 func (this *Topics) Feed() {
 	topics, _ := models.FindTopicPages("recent", 0, 1, 20)
 	this.Data["topics"] = topics
-	this.TplName = "topics/feed.html"
+	this.Layout = "topics/feed.html"
+	//this.TplName = "topics/feed.html"
 	this.ServeXML()
 }
 
@@ -154,7 +155,6 @@ func (this *Topics) Edit() {
 func (this *Topics) Update() {
 	this.requireUser()
 	t, _ := models.GetTopicById(help.StrToInt32(this.Ctx.Input.Param(":id")))
-	beego.Info("topic:===", t)
 	if !this.isOwner(t) {
 		beego.NewFlash().Error("没有修改的权限")
 		this.Redirect("/")
@@ -194,40 +194,34 @@ func (this *Topics) Watch() {
 	this.requireUserForJSON()
 	t, _ := models.GetTopicById(help.StrToInt32(this.Ctx.Input.Param(":id")))
 	this.currentUser.Watch(t)
-	//return this.successJSON(t.WatchesCount + 1)
+	this.successJSON(t.WatchesCount + 1)
 }
 
 func (this *Topics) UnWatch() {
 	this.requireUserForJSON()
-	//t := Topic{}
-	//DB.First(&t, this.GetString("id"))
 	t, _ := models.GetTopicById(help.StrToInt32(this.Ctx.Input.Param(":id")))
 	this.currentUser.UnWatch(t)
-	//return this.successJSON(t.WatchesCount - 1)
-	return
+	this.successJSON(t.WatchesCount - 1)
 }
 
 func (this *Topics) Star() {
 	this.requireUserForJSON()
-	//t := Topic{}
-	//DB.First(&t, this.GetString("id"))
-	t, _ := models.GetTopicById(help.StrToInt32(this.Ctx.Input.Param(":id")))
+	topicId := help.StrToInt32(this.Ctx.Input.Param(":id"))
+	t, _ := models.GetTopicById(topicId)
 	this.currentUser.Star(t)
-	//return this.successJSON(t.StarsCount + 1)
-	return
+	this.successJSON(t.StarsCount + 1)
 }
 
 func (this *Topics) UnStar() {
 	this.requireUserForJSON()
 	t, _ := models.GetTopicById(help.StrToInt32(this.Ctx.Input.Param(":id")))
 	this.currentUser.UnStar(t)
-	//return this.successJSON(t.StarsCount - 1)
-	return
+	this.successJSON(t.StarsCount - 1)
 }
 
+//加精或者埋贴
 func (this *Topics) Rank() {
 	this.requireAdmin()
-
 	rankVal := 0
 	switch strings.ToLower(this.GetString("v")) {
 	case "nopoint":

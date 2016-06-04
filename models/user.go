@@ -215,14 +215,6 @@ func UpdateUserProfile(u *User) (user User, err error) {
 		}
 		return *u, err
 	}
-	//willUpdateUser := User{
-	//	Email:       u.Email,
-	//	Location:    u.Location,
-	//	Description: u.Description,
-	//	GitHub:      u.GitHub,
-	//	Twitter:     u.Twitter,
-	//	Tagline:     u.Tagline,
-	//}
 	_, err = orm.NewOrm().Update(u)
 	if err != nil {
 		err = errors.New("服务器更新失败")

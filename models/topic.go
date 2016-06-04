@@ -10,9 +10,6 @@ import (
 	"github.com/astaxie/beego/validation"
 )
 
-//UserId             int32 ``
-//NodeId             int32 ``
-//LastReplyUserId    int32     ``
 type Topic struct {
 	Id                 int32     `orm:"pk;auto"`
 	User               *User     `orm:"rel(fk)"`
@@ -56,8 +53,6 @@ func GetTopicById(id int32) (topic Topic, err error) {
 	err = orm.NewOrm().QueryTable(TableName("topic")).Filter("id", id).RelatedSel().One(&topic)
 	if err != nil {
 		beego.Error(err, id)
-	} else {
-		beego.Info("tpp===", topic)
 	}
 	return
 }
@@ -156,7 +151,7 @@ func (t Topic) UpdateRank(rank int) error {
 	if t.NewRecord() {
 		return errors.New("Give a empty record.")
 	}
-	_, err := orm.NewOrm().QueryTable(&t).Update(orm.Params{"rank": rank})
+	_, err := orm.NewOrm().QueryTable(&t).Filter("id", t.Id).Update(orm.Params{"rank": rank})
 	return err
 }
 
@@ -180,6 +175,7 @@ func (t Topic) URL() string {
 }
 
 func (t Topic) FollowerIds() (ids []int32) {
+	orm.NewOrm().QueryTable(&Followable{}).Filter("follow_type", "watch").Filter("topic_id", t.Id).All(&ids, "user_id")
 	//db.Model(Followable{}).Where("follow_type = 'Watch' and topic_id = ?", t.Id).Pluck("user_id", &ids)
 	return
 }

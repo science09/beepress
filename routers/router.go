@@ -9,16 +9,6 @@ import (
 //WS      /msg            Home.Message
 //GET     /search         Home.Search
 //
-//GET 	  /signup 			Accounts.New
-//POST 	  /signup 			Accounts.Create
-//GET 	  /signin 			Accounts.Login
-//POST	  /signin			Accounts.LoginCreate
-//POST    /signout          Accounts.Logout
-//GET     /account/edit     Accounts.Edit
-//POST    /account          Accounts.Update
-//GET     /account/password     Accounts.Password
-//POST    /account/password/update     Accounts.UpdatePassword
-//
 //GET     /topics           Topics.Index
 //GET     /topics/feed           Topics.Feed
 //GET     /topics/node/:node_id      Topics.Index("node")
@@ -38,27 +28,6 @@ import (
 //POST    /topics/:id/unstar       Topics.UnStar
 //POST    /topics/:id/rank         Topics.Rank
 //
-//GET     /replies/:id/edit          Replies.Edit
-//POST    /replies/:id          Replies.Update
-//POST    /replies/:id/delete          Replies.Delete
-//
-//GET     /notifications            Notifications.Index
-//POST    /notifications/clear      Notifications.Clear
-//
-//GET     /nodes            Nodes.Index
-//POST    /nodes            Nodes.Create
-//GET     /nodes/:id/edit            Nodes.Edit
-//POST    /nodes/:id            Nodes.Update
-//POST    /nodes/:id/delete            Nodes.Delete
-//
-//GET     /settings                 Settings.Index
-//GET     /settings/:key/edit       Settings.Edit
-//POST    /settings/:key            Settings.Update
-//
-//GET     /captcha                  App.Captcha
-//
-//GET     /:login             Users.Show
-//GET     /:login/topics      Users.Topics
 
 func init() {
 	beego.Router("/", &controllers.Home{}, "*:Index")

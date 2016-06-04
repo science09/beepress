@@ -2,15 +2,17 @@ package models
 
 import (
 	"time"
-	//"fmt"
+
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/orm"
 )
 
 type Followable struct {
-	Id         int32  `orm:"pk;auto"`
-	FollowType string `orm:"size(20)"`
-	TopicId    int32
-	Topic      *Topic `orm:"-"`
-	UserId     int32
+	Id         int32     `orm:"pk;auto"`
+	FollowType string    `orm:"size(20)"`
+	TopicId    int32     ``
+	Topic      *Topic    `orm:"-"`
+	UserId     int32     ``
 	User       *User     `orm:"-"`
 	CreatedAt  time.Time `orm:"type(datetime);auto_now_add"`
 	UpdatedAt  time.Time `orm:"type(datetime);auto_now"`
@@ -21,9 +23,9 @@ func (f *Followable) TableName() string {
 }
 
 func (u User) isFollowed(ftype string, t Topic) bool {
-	var existCount int
-	//DB.Model(&Followable{}).Where("follow_type = ? and topic_id = ? and user_id = ?", ftype, t.Id, u.Id).Count(&existCount)
-	if existCount > 0 {
+	followId, _ := orm.NewOrm().QueryTable(&Followable{}).Filter("follow_type", ftype).
+		Filter("topic_id", t.Id).Filter("user_id", u.Id).Count()
+	if followId > 0 {
 		return true
 	} else {
 		return false
@@ -38,11 +40,10 @@ func (u User) follow(ftype string, t Topic) bool {
 	if u.isFollowed(ftype, t) {
 		return false
 	}
-
-	//follow := Followable{FollowType: ftype, TopicId: t.Id, UserId: u.Id}
-	//if DB.Save(&follow).Error != nil {
-	//	return false
-	//}
+	follow := Followable{FollowType: ftype, TopicId: t.Id, UserId: u.Id}
+	if _, err := orm.NewOrm().Insert(&follow); err != nil {
+		return false
+	}
 	t.updateFollowCounter(ftype)
 	return true
 }
@@ -55,25 +56,26 @@ func (u User) unFollow(ftype string, t Topic) bool {
 	if !u.isFollowed(ftype, t) {
 		return false
 	}
-
-	//DB.Where("follow_type = ? and topic_id = ? and user_id = ?", ftype, t.Id, u.Id).Delete(&Followable{})
+	_, err := orm.NewOrm().QueryTable(&Followable{}).Filter("follow_type", ftype).
+		Filter("topic_id", t.Id).Filter("user_id", u.Id).Delete()
+	if err != nil {
+		return false
+	}
 	t.updateFollowCounter(ftype)
 	return true
 }
 
 func (t Topic) updateFollowCounter(ftype string) {
-	//var count int
-	//DB.Model(&Followable{}).Where("follow_type = ? and topic_id = ?", ftype, t.Id).Count(&count)
-
-	//counterCacheKey := "watches_count"
-	//if ftype == "Star" {
-	//	counterCacheKey = "stars_count"
-	//}
-
-	//err := DB.Model(t).Update(counterCacheKey, count).Error
-	//if err != nil {
-	//	fmt.Println("WARNING: updateFollowCounter execute failed: ", err)
-	//}
+	o := orm.NewOrm()
+	count, _ := o.QueryTable(&Followable{}).Filter("follow_type", ftype).Filter("topic_id", t.Id).Count()
+	counterCacheKey := "watches_count"
+	if ftype == "Star" {
+		counterCacheKey = "stars_count"
+	}
+	_, err := o.QueryTable(&t).Filter("topic_id", t.Id).Update(orm.Params{counterCacheKey: count})
+	if err != nil {
+		beego.Error("WARNING: updateFollowCounter execute failed: ", err)
+	}
 }
 
 func (u User) IsWatched(t Topic) bool {

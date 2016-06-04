@@ -104,8 +104,10 @@ func (this *BaseController) requireUser() {
 }
 
 func (this *BaseController) requireUserForJSON() {
-	if this.isLogined() {
-		//c.Finish(c.errorJSON(JSON_CODE_NO_LOGIN, "还未登录"))
+	if !this.isLogined() {
+		beego.Info("---- is not login ----")
+		this.errorJSON(JSON_CODE_NO_LOGIN, "还未登录")
+		this.StopRun()
 	}
 }
 
@@ -114,6 +116,7 @@ func (this *BaseController) requireAdmin() {
 	if !this.currentUser.IsAdmin() {
 		flash := beego.NewFlash()
 		flash.Error("此功能需要管理员权限。")
+		flash.Store(&this.Controller)
 		this.Redirect("/")
 		return
 	}

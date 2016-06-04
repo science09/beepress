@@ -2,10 +2,10 @@ package models
 
 import (
 	"errors"
+	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/validation"
 	"time"
-	"github.com/astaxie/beego"
 )
 
 type Node struct {
