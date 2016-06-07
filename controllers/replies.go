@@ -13,10 +13,10 @@ type Replies struct {
 }
 
 func (this *Replies) Create() {
+	var err error
 	flash := beego.NewFlash()
 	this.requireUser()
 	reply := &models.Reply{Body: this.GetString("body")}
-	var err error
 	topicId, _ := strconv.Atoi(this.Ctx.Input.Param(":id"))
 	this.topic, err = models.GetTopicById(int32(topicId))
 	this.Data["topic"] = this.topic

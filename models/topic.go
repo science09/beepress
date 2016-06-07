@@ -48,8 +48,6 @@ func GetTopicCount() (count int) {
 }
 
 func GetTopicById(id int32) (topic Topic, err error) {
-	//err = orm.NewOrm().QueryTable(TableName("topic")).Filter("id", id).One(&topic)
-	//topic.User, _ = GetUserById(int(topic.User.Id))
 	err = orm.NewOrm().QueryTable(TableName("topic")).Filter("id", id).RelatedSel().One(&topic)
 	if err != nil {
 		beego.Error(err, id)
@@ -69,35 +67,33 @@ func GetRecentTopics(user_id int32) (topic []Topic, err error) {
 }
 
 func FindTopicPages(channel string, nodeId, page, perPage int) (topics []*Topic, pageInfo Pagination) {
-	pageInfo = Pagination{}
 	o := orm.NewOrm()
 	qs := o.QueryTable(TableName("topic"))
 	switch channel {
 	case "recent":
-		qs.OrderBy("-id").RelatedSel().All(&topics)
+		//qs.OrderBy("-id").RelatedSel().All(&topics)
+		pageInfo.Query = qs.OrderBy("-id").RelatedSel()
 	case "popular":
 		cond := orm.NewCondition().And("rank", 1).Or("stars_count__gte", 5)
-		qs.SetCond(cond).RelatedSel().All(&topics)
-
+		//qs.SetCond(cond).RelatedSel().OrderBy("-last_active_mark", "-id").All(&topics)
+		pageInfo.Query = qs.SetCond(cond).RelatedSel().OrderBy("-last_active_mark", "-id")
 		//pageInfo.Query = pageInfo.Query.Where("rank = 1 or stars_count >= 5")
 		//pageInfo.Query = pageInfo.Query.Order("last_active_mark desc, id desc")
 	case "node":
-		qs.Filter("node_id", nodeId).OrderBy("-last_active_mark", "-id").RelatedSel().All(&topics)
+		//qs.Filter("node_id", nodeId).RelatedSel().OrderBy("-last_active_mark", "-id").All(&topics)
+		pageInfo.Query = qs.Filter("node_id", nodeId).RelatedSel().OrderBy("-last_active_mark", "-id")
 		//pageInfo.Query = pageInfo.Query.Where("node_id = ?", nodeId)
 		//pageInfo.Query = pageInfo.Query.Order("last_active_mark desc, id desc")
 	default:
-		qs.OrderBy("-last_active_mark", "-id").RelatedSel().All(&topics)
+		//qs.RelatedSel().OrderBy("-last_active_mark", "-id").All(&topics)
 		//pageInfo.Query = pageInfo.Query.Where("rank >= 0").Order("last_active_mark desc, id desc")
+		pageInfo.Query = qs.RelatedSel().OrderBy("-last_active_mark", "-id")
 	}
 
-	for _, val := range topics {
-		count, _ := o.QueryTable("t_reply").Filter("topic_id", val.Id).Count()
-		val.RepliesCount = int32(count)
-		beego.Info("count:", val.RepliesCount, val.Replies)
-	}
-	//pageInfo.Path = "/topics"
-	//pageInfo.PerPage = perPage
-	//pageInfo.Paginate(page).Find(&topics)
+	pageInfo.Path = "/topics"
+	pageInfo.PerPage = perPage
+	pageInfo.Paginate(page).All(&topics)
+
 	return
 }
 
@@ -129,10 +125,17 @@ func (t *Topic) UpdateLastReply(reply *Reply) (err error) {
 	if reply == nil {
 		return errors.New("Reply is nil")
 	}
+
+	o := orm.NewOrm()
+	o.QueryTable(&User{}).Filter("id", reply.User.Id).One(reply.User)
+	_, err = o.QueryTable(&Topic{}).Filter("id", reply.Topic.Id).Update(orm.Params{"updated_at": time.Now(),
+		"last_active_mark": time.Now().Unix(), "last_replied_at": time.Now(), "last_reply_id": reply.Id,
+		"last_reply_user_login": reply.User.Login}) //"last_reply_user_id": reply.User.Id
+
 	//db.First(&reply.User, reply.UserId)
 	//err = db.Exec(`UPDATE topics SET updated_at = ?, last_active_mark = ?, last_replied_at = ?,
 	//	last_reply_id = ?, last_reply_user_login = ?, last_reply_user_id = ? WHERE id = ?`,
-	//	time.Now(),
+	//	time.Now(),d
 	//	time.Now().Unix(),
 	//	time.Now(),
 	//	reply.Id,
@@ -147,7 +150,7 @@ func (t *Topic) NewRecord() bool {
 	return t.Id <= 0
 }
 
-func (t Topic) UpdateRank(rank int) error {
+func (t *Topic) UpdateRank(rank int) error {
 	if t.NewRecord() {
 		return errors.New("Give a empty record.")
 	}
@@ -171,12 +174,17 @@ func (t Topic) URL() string {
 	if t.NewRecord() {
 		return ""
 	}
-	return fmt.Sprintf("%v/topics/%v", "https://127.0.0.1:3000", t.Id)
+	return fmt.Sprintf("%v/topics/%v", "https://127.0.0.1:8080", t.Id)
 }
 
-func (t Topic) FollowerIds() (ids []int32) {
-	orm.NewOrm().QueryTable(&Followable{}).Filter("follow_type", "watch").Filter("topic_id", t.Id).All(&ids, "user_id")
-	//db.Model(Followable{}).Where("follow_type = 'Watch' and topic_id = ?", t.Id).Pluck("user_id", &ids)
+func (t *Topic) FollowerIds() (ids []int32) {
+	follows := []Followable{}
+	orm.NewOrm().QueryTable(&Followable{}).Filter("follow_type", "watch").Filter("topic_id", t.Id).All(&follows, "user_id")
+	ids = make([]int32, len(follows))
+	for key, val := range follows {
+		ids[key] = int32(val.UserId)
+	}
+
 	return
 }
 

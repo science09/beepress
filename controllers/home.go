@@ -1,11 +1,13 @@
 package controllers
 
 import (
+	"beepress/models"
 	"fmt"
 	"github.com/astaxie/beego"
+	"golang.org/x/net/websocket"
 )
 
-type Home struct  {
+type Home struct {
 	BaseController
 }
 
@@ -30,6 +32,13 @@ func (this *Home) Message() {
 	//	}
 	//})
 
+	ws := &websocket.Conn{}
+	models.Subscribe(this.currentUser.NotifyChannelId(), func(out interface{}) {
+		err := websocket.JSON.Send(ws, out)
+		if err != nil {
+			beego.Error("WebSocket send error: ", err)
+		}
+	})
 }
 
 func (this *Home) Search() {

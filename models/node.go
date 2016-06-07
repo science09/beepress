@@ -2,21 +2,23 @@ package models
 
 import (
 	"errors"
+	"time"
+
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/validation"
-	"time"
 )
 
+//NodeGroupId int       ``
 type Node struct {
-	Id          int32  `orm:"pk;auto"`
-	Name        string `orm:"unique"`
-	Summary     string `orm:"type(text)"`
-	NodeGroupId int
-	Sort        int       `orm:"default(0)"`
-	CreatedAt   time.Time `orm:"type(datetime);auto_now_add"`
-	UpdatedAt   time.Time `orm:"type(datetime);auto_now"`
-	DeletedAt   time.Time `orm:"type(datetime);null"`
+	Id        int32      `orm:"pk;auto"`
+	Name      string     `orm:"unique"`
+	Summary   string     `orm:"type(text)"`
+	NodeGroup *NodeGroup `orm:"rel(fk)"`
+	Sort      int        `orm:"default(0)"`
+	CreatedAt time.Time  `orm:"type(datetime);auto_now_add"`
+	UpdatedAt time.Time  `orm:"type(datetime);auto_now"`
+	DeletedAt time.Time  `orm:"type(datetime);null"`
 }
 
 func (n *Node) TableName() string {
@@ -24,10 +26,10 @@ func (n *Node) TableName() string {
 }
 
 type NodeGroup struct {
-	Id    int32  `orm:"pk;auto"`
-	Name  string `orm:"unique"`
-	Sort  int    `orm:"default(0)"`
-	Nodes []Node `orm:"-"`
+	Id    int32   `orm:"pk;auto"`
+	Name  string  `orm:"unique"`
+	Sort  int     `orm:"default(0)"`
+	Nodes []*Node `orm:"reverse(many)"`
 }
 
 func (n *NodeGroup) TableName() string {
@@ -82,13 +84,15 @@ func UpdateNode(n *Node) (err error) {
 //这一步需要优化
 func FindAllNodeGroups() (groups []NodeGroup) {
 	o := orm.NewOrm()
-	o.QueryTable(TableName("node_groups")).All(&groups)
-	for key, val := range groups {
-		beego.Info("value:", val)
-		var nodes []Node
-		o.QueryTable(TableName("node")).Filter("node_group_id", val.Id).All(&nodes)
-		groups[key].Nodes = nodes
+	_, err := o.QueryTable(TableName("node_groups")).All(&groups)
+	if err != nil {
+		beego.Error(err)
 	}
+	for key, val := range groups {
+		o.LoadRelated(&val, "Nodes")
+		groups[key].Nodes = val.Nodes
+	}
+
 	return
 }
 

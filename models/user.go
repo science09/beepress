@@ -64,7 +64,7 @@ func GetRand() int {
 }
 
 func GenerateAvatar(name string) error {
-	strByte := []byte(name)
+	nameByte := []byte(name)
 	u := User{Login: name}
 	fileName := u.EncodePassword(name) + suffix
 	bg := bgColor[GetRand()%len(bgColor)]
@@ -81,13 +81,14 @@ func GenerateAvatar(name string) error {
 	svg := fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240">
   <rect x="0" y="0" width="240" height="240" rx="6" ry="6" fill="%s" />
   <text fill="white" x="120" y="120" font-size="160" font-weight="bold" text-anchor="middle" style="dominant-baseline: central;">%s</text>
-</svg>`, bg, strings.ToUpper(string(strByte[0])))
+</svg>`, bg, strings.ToUpper(string(nameByte[0])))
 	f.WriteString(svg)
 
 	return err
 }
 
 func (u User) NotifyChannelId() string {
+	fmt.Printf("notify/%v", u.Id)
 	return fmt.Sprintf("notify/%v", u.Id)
 }
 
@@ -116,7 +117,6 @@ func (u User) UnReadNotificationsCount() (count int32) {
 		beego.Error(err)
 	}
 	count = int32(count64)
-	//db.Model(&Notification{}).Where("`user_id` = ? and `read` = 0", u.Id).Count(&count)
 	return
 }
 
@@ -133,7 +133,8 @@ func PushNotifyInfoToUser(userId int32, note Notification, isNew bool) {
 
 	actor := User{}
 	if note.Id > 0 {
-		//db.First(&actor, note.ActorId)
+		u, _ := GetUserById(int(note.Actor.Id))
+		actor = *u
 	}
 	info := NotifyInfo{
 		UnreadCount: unreadCount,

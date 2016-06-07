@@ -1,7 +1,6 @@
 package models
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"time"
@@ -23,11 +22,11 @@ func (m BaseModel) NewRecord() bool {
 	return m.Id <= 0
 }
 
-func (m BaseModel) Destroy() error {
-	//err := db.Delete(&m).Error
-	err := errors.New("Not implemented!")
-	return err
-}
+//func (m BaseModel) Destroy() error {
+//	//err := db.Delete(&m).Error
+//	err := errors.New("Not implemented!")
+//	return err
+//}
 
 func (m BaseModel) IsDeleted() bool {
 	return m.DeletedAt != nil
@@ -65,7 +64,7 @@ func Init() {
 	}
 
 	InitNodeGroup()
-
+	initPubsub()
 
 	//db.LogMode(false)
 	//logger = Logger{log.New(os.Stdout, "  ", 0)}

@@ -9,6 +9,10 @@ import (
 	"strings"
 )
 
+var (
+	NumPerPage int = 20
+)
+
 type Topics struct {
 	BaseController
 }
@@ -20,18 +24,8 @@ func (this *Topics) NestPrepare() {
 func (this *Topics) Index() {
 	var page, nodeId int
 	channel := ""
-
-	//this.Ctx.Input.Bind(&page, "page")
-	//this.Ctx.Input.Bind(&nodeId, "node_id")
-	//beego.Info("page,nodeID:", this.GetString("page"), this.GetString("node_id"))
-
-	if strings.EqualFold(channel, "node") {
-		nodeId = 2
-		node, _ := models.GetNodeById(int32(nodeId))
-		this.Data["node"] = node
-	}
-	topics, pageInfo := models.FindTopicPages(channel, nodeId, page, 20)
-	pageInfo.Path = "" //this.Request.URL.Path
+	this.Ctx.Input.Bind(&page, "page")
+	topics, pageInfo := models.FindTopicPages(channel, nodeId, page, NumPerPage)
 	this.Data["title"] = "社区"
 	this.Data["channel"] = channel
 	this.Data["topics"] = topics
@@ -42,10 +36,11 @@ func (this *Topics) Index() {
 func (this *Topics) TopicNode() {
 	var page int
 	channel := "node"
+	this.Ctx.Input.Bind(&page, "page")
 	nodeId, _ := strconv.Atoi(this.Ctx.Input.Param(":node_id"))
-	topics, pageInfo := models.FindTopicPages(channel, nodeId, page, 20)
+	topics, pageInfo := models.FindTopicPages(channel, nodeId, page, NumPerPage)
 	Node, _ := models.GetNodeById(int32(nodeId))
-	pageInfo.Path = "" //this.Request.URL.Path
+	pageInfo.Path = "/topics" //this.Request.URL.Path
 	this.Data["title"] = "社区"
 	this.Data["node"] = Node
 	this.Data["channel"] = channel
@@ -53,10 +48,12 @@ func (this *Topics) TopicNode() {
 	this.Data["page_info"] = pageInfo
 	this.TplName = "topics/index.html"
 }
+
 func (this *Topics) Popular() {
 	var page int
 	channel := "popular"
-	topics, pageInfo := models.FindTopicPages(channel, 0, page, 20)
+	this.Ctx.Input.Bind(&page, "page")
+	topics, pageInfo := models.FindTopicPages(channel, 0, page, NumPerPage)
 	pageInfo.Path = "" //this.Request.URL.Path
 	this.Data["title"] = "社区"
 	this.Data["channel"] = channel
@@ -68,7 +65,8 @@ func (this *Topics) Popular() {
 func (this *Topics) Recent() {
 	var page int
 	channel := "recent"
-	topics, pageInfo := models.FindTopicPages(channel, 0, page, 20)
+	this.Ctx.Input.Bind(&page, "page")
+	topics, pageInfo := models.FindTopicPages(channel, 0, page, NumPerPage)
 	pageInfo.Path = "" //this.Request.URL.Path
 	this.Data["title"] = "社区"
 	this.Data["channel"] = channel
@@ -78,10 +76,12 @@ func (this *Topics) Recent() {
 }
 
 func (this *Topics) Feed() {
-	topics, _ := models.FindTopicPages("recent", 0, 1, 20)
+	topics, _ := models.FindTopicPages("recent", 0, 1, NumPerPage)
 	this.Data["topics"] = topics
-	this.Layout = "topics/feed.html"
-	//this.TplName = "topics/feed.html"
+	this.Layout = ""
+	this.TplName = "topics/feed.html"
+	rssData, _ := this.RenderBytes()
+	this.Data["xml"] = string(rssData)
 	this.ServeXML()
 }
 

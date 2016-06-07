@@ -1,12 +1,11 @@
 package models
 
 import (
-	"math"
 	"github.com/astaxie/beego/orm"
+	"math"
 )
 
 type Pagination struct {
-	//Query        *gorm.DB
 	Query        orm.QuerySeter
 	TotalEntites int
 	PerPage      int
@@ -17,7 +16,6 @@ type Pagination struct {
 
 func (p *Pagination) Paginate(page int) orm.QuerySeter {
 	p.Page = page
-	//p.Query.Count(&p.TotalEntites)
 	total, _ := p.Query.Count()
 	p.TotalEntites = int(total)
 	if p.TotalEntites == 0 {

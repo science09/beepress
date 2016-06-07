@@ -5,32 +5,9 @@ import (
 	"github.com/astaxie/beego"
 )
 
-//GET     /				  Home.Index
-//WS      /msg            Home.Message
-//GET     /search         Home.Search
-//
-//GET     /topics           Topics.Index
-//GET     /topics/feed           Topics.Feed
-//GET     /topics/node/:node_id      Topics.Index("node")
-//GET     /topics/popular           Topics.Index("popular")
-//GET     /topics/recent           Topics.Index("recent")
-//
-//GET     /topics/new       Topics.New
-//GET     /topics/:id       Topics.Show
-//GET     /topics/:id/edit       Topics.Edit
-//POST    /topics/:id       Topics.Update
-//POST    /topics           Topics.Create
-//POST    /topics/:id/delete       Topics.Delete
-//POST    /topics/:id/reply          Replies.Create
-//POST    /topics/:id/watch       Topics.Watch
-//POST    /topics/:id/unwatch       Topics.UnWatch
-//POST    /topics/:id/star       Topics.Star
-//POST    /topics/:id/unstar       Topics.UnStar
-//POST    /topics/:id/rank         Topics.Rank
-//
-
 func init() {
-	beego.Router("/", &controllers.Home{}, "*:Index")
+	beego.Router("/", &controllers.Home{}, "get:Index")
+	beego.Router("/msg", &controllers.Home{}, "get:Message")
 	beego.Router("/search", &controllers.Home{}, "*:Search")
 	beego.Router("/signup", &controllers.Accounts{}, "get:New;post:Create")
 	beego.Router("/signin", &controllers.Accounts{}, "get:Login;post:LoginCreate")

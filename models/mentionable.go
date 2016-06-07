@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/astaxie/beego/orm"
 	"regexp"
 	"sort"
 )
@@ -24,8 +25,13 @@ func searchMentionLogins(body string) []string {
 
 func searchMentionUserIds(body string) (userIds []int32) {
 	logins := searchMentionLogins(body)
+	var users []User
 	if len(logins) > 0 {
-		//DB.Model(&User{}).Where("login in (?)", logins).Pluck("id", &userIds)
+		orm.NewOrm().QueryTable(&User{}).Filter("login__in", logins).All(&users, "id")
+	}
+	userIds = make([]int32, len(users))
+	for key, user := range users {
+		userIds[key] = user.Id
 	}
 	return
 }

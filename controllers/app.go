@@ -36,9 +36,9 @@ func (this *BaseController) Prepare() {
 	this.Layout = "layout/layout.html"
 	this.Data["controller_name"] = "Topic"
 	controller, action := this.GetControllerAndAction()
-	this.Data["controller_name"] = controller //inflections.Underscore(this.Name)
-	this.Data["method_name"] = action         //inflections.Underscore(this.MethodName)
-	//this.Data["route_name"] = fmt.Sprintf("%v#%v", inflections.Underscore(this.Name), inflections.Underscore(this.MethodName))
+	this.Data["controller_name"] = controller                          //inflections.Underscore(this.Name)
+	this.Data["method_name"] = action                                  //inflections.Underscore(this.MethodName)
+	this.Data["route_name"] = fmt.Sprintf("%v#%v", controller, action) //fmt.Sprintf("%v#%v", inflections.Underscore(this.Name), inflections.Underscore(this.MethodName))
 
 	if app, ok := this.AppController.(NestPreparer); ok {
 		app.NestPrepare()
@@ -105,7 +105,6 @@ func (this *BaseController) requireUser() {
 
 func (this *BaseController) requireUserForJSON() {
 	if !this.isLogined() {
-		beego.Info("---- is not login ----")
 		this.errorJSON(JSON_CODE_NO_LOGIN, "还未登录")
 		this.StopRun()
 	}

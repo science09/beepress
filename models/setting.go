@@ -8,9 +8,9 @@ import (
 )
 
 type Setting struct {
-	Id  int32 `orm:"pk;auto"`
-	Key string
-	Val string
+	Id  int32  `orm:"pk;auto"`
+	Key string ``
+	Val string ``
 }
 
 func (s *Setting) TableName() string {

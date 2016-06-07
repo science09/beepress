@@ -72,7 +72,7 @@ func (t Topic) updateFollowCounter(ftype string) {
 	if ftype == "Star" {
 		counterCacheKey = "stars_count"
 	}
-	_, err := o.QueryTable(&t).Filter("topic_id", t.Id).Update(orm.Params{counterCacheKey: count})
+	_, err := o.QueryTable(&t).Filter("id", t.Id).Update(orm.Params{counterCacheKey: count})
 	if err != nil {
 		beego.Error("WARNING: updateFollowCounter execute failed: ", err)
 	}

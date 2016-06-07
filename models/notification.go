@@ -7,15 +7,13 @@ import (
 )
 
 type Notification struct {
-	Id             int32
-	NotifyType     string
-	Read           bool `orm:"default(false)"`
-	UserId         int32
-	User           *User `orm:"-"`
-	ActorId        int32
-	Actor          *User `orm:"-"`
-	NotifyableType string
-	NotifyableId   int32
+	Id             int32     ``
+	NotifyType     string    ``
+	Read           bool      `orm:"default(false)"`
+	User           *User     `orm:"rel(fk)"`
+	Actor          *User     `orm:"rel(fk)"`
+	NotifyableType string    ``
+	NotifyableId   int32     ``
 	CreatedAt      time.Time `orm:"auto_now_add;type(datetime)"`
 	UpdatedAt      time.Time `orm:"auto_now;type(datetime)"`
 }
@@ -51,8 +49,6 @@ func (n *Notification) NotifyableTitle() string {
 	case "Topic":
 		return n.Topic().Title
 	case "Reply":
-		//t := Topic{}
-		//db.First(&t, n.Reply().TopicId)
 		r, _ := n.Reply()
 		t, _ := GetTopicById(r.Topic.Id)
 		return t.Title
@@ -74,14 +70,22 @@ func (n *Notification) NotifyableURL() string {
 }
 
 func createNotification(notifyType string, userId int32, actorId int32, notifyableType string, notifyableId int32) error {
+	user := &User{Id: userId}
+	actor := &User{Id: actorId}
 	note := Notification{
 		NotifyType:     notifyType,
-		UserId:         userId,
-		ActorId:        actorId,
+		User:           user,
+		Actor:          actor,
 		NotifyableType: notifyableType,
 		NotifyableId:   notifyableId,
 	}
 
+	o := orm.NewOrm()
+	existCount, _ := o.QueryTable(Notification{}).Filter("user_id", userId).Filter("actor_id", actorId).
+		Filter("notifyable_type", notifyableType).Filter("notifyable_id", notifyableId).Count()
+	if existCount > 0 {
+		return nil
+	}
 	//exitCount := 0
 	//db.Model(Notification{}).Where(
 	//	"user_id = ? and actor_id = ? and notifyable_type = ? and notifyable_id = ?",
@@ -90,9 +94,8 @@ func createNotification(notifyType string, userId int32, actorId int32, notifyab
 	//	return nil
 	//}
 	//
-
 	//err := db.Save(&note).Error
-	_, err := orm.NewOrm().Insert(&note)
+	_, err := o.Insert(&note)
 	go PushNotifyInfoToUser(userId, note, true)
 
 	return err
@@ -103,9 +106,6 @@ func (r *Reply) NotifyReply() error {
 		return nil
 	}
 
-	//t := Topic{}
-	//
-	//err := db.Find(&t, r.TopicId).Error
 	t, err := GetTopicById(r.Topic.Id)
 	if err != nil {
 		return nil
@@ -132,24 +132,21 @@ func NotifyMention(userId, actorId int32, notifyableType string, notifyableId in
 	return createNotification("Mention", userId, actorId, notifyableType, notifyableId)
 }
 
-func (u User) NotificationsPage(page, perPage int) (notes []Notification, pageInfo Pagination) {
+func (u *User) NotificationsPage(page, perPage int) (notes []Notification, pageInfo Pagination) {
 	pageInfo = Pagination{}
-	//pageInfo.Query = db.Model(&Notification{}).Preload("Actor")
-	//pageInfo.Query = pageInfo.Query.Where("user_id = ?", u.Id).Order("id desc")
-	//
-	//pageInfo.Path = "/notifications"
-	//pageInfo.PerPage = perPage
-	//pageInfo.Paginate(page).All(&notes)
+	pageInfo.Query = orm.NewOrm().QueryTable(&Notification{}).Filter("user_id", u.Id).OrderBy("-id").RelatedSel()
+	pageInfo.Path = "/notifications"
+	pageInfo.PerPage = perPage
+	pageInfo.Paginate(page).All(&notes)
 	return
 }
 
-func (u User) ReadNotifications(notes []Notification) error {
+func (u *User) ReadNotifications(notes []Notification) error {
 	ids := []int32{}
 	for _, note := range notes {
 		ids = append(ids, note.Id)
 	}
 	if len(ids) > 0 {
-		//err := db.Model(Notification{}).Where("user_id = ? and id in (?)", u.Id, ids).Update("read", true).Error
 		_, err := orm.NewOrm().QueryTable(TableName("notification")).Filter("user_id", u.Id).Filter("id__in", ids).Update(orm.Params{"read": true})
 		go PushNotifyInfoToUser(u.Id, Notification{}, false)
 		return err
@@ -158,7 +155,7 @@ func (u User) ReadNotifications(notes []Notification) error {
 	return nil
 }
 
-func (u User) ClearNotifications() error {
+func (u *User) ClearNotifications() error {
 	_, err := orm.NewOrm().QueryTable(TableName("notification")).Filter("user_id", u.Id).Delete()
 	return err
 }

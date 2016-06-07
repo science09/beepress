@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/validation"
 )
@@ -24,6 +25,21 @@ func (r *Reply) TableName() string {
 
 func (r *Reply) NewRecord() bool {
 	return r.Id <= 0
+}
+
+func (r *Reply) BeforeCreate() (err error) {
+	return err
+}
+
+func (r *Reply) BeforeDelete() (err error) {
+	return err
+}
+
+func (r *Reply) AfterCreate() (err error) {
+	err = r.Topic.UpdateLastReply(r)
+	go r.NotifyReply()
+	go r.CheckMention()
+	return nil
 }
 
 func (r *Reply) validate() validation.Validation {
@@ -48,13 +64,20 @@ func CreateReply(r *Reply) (err error) {
 	//}
 
 	//需要先验证reply的正确性
-
-	_, err = orm.NewOrm().Insert(r)
+	o := orm.NewOrm()
+	_, err = o.Insert(r)
 	if err != nil {
 		err = errors.New("服务器异常创建失败")
+		return
 	}
+	//update topic reply count
+	beego.Info("creat reply ---:", r.Topic.Id)
+	o.QueryTable(&Topic{}).Filter("id", r.Topic.Id).Update(orm.Params{"replies_count": orm.ColValue(orm.ColAdd, 1)})
+	r.Topic.UpdateLastReply(r)
+	go r.NotifyReply()
+	go r.CheckMention()
 
-	return
+	return nil
 }
 
 func GetReplyCount() int {
@@ -93,6 +116,8 @@ func UpdateReply(reply Reply) error {
 }
 
 func (r *Reply) Del() (err error) {
+	o := orm.NewOrm()
+	o.QueryTable(&Topic{}).Filter("id", r.Topic.Id).Update(orm.Params{"replies_count": orm.ColValue(orm.ColMinus, 1)})
 	_, err = orm.NewOrm().QueryTable(TableName("reply")).Filter("Id", r.Id).Update(orm.Params{"IsDeleted": true})
 	if err != nil {
 		err = errors.New("删除评论失败!")

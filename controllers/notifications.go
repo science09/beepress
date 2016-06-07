@@ -1,5 +1,9 @@
 package controllers
 
+import (
+	"github.com/astaxie/beego"
+)
+
 type Notifications struct {
 	BaseController
 }
@@ -7,8 +11,9 @@ type Notifications struct {
 func (this *Notifications) Index() {
 	this.requireUser()
 	var page int
-	//this.Params.Bind(&page, "page")
-	notes, pageInfo := this.currentUser.NotificationsPage(page, 8)
+	this.Ctx.Input.Bind(&page, "page")
+	beego.Error("page:", page)
+	notes, pageInfo := this.currentUser.NotificationsPage(page, 10)
 	this.currentUser.ReadNotifications(notes)
 	this.Data["title"] = "社区"
 	this.Data["notifications"] = notes

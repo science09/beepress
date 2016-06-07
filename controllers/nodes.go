@@ -31,9 +31,10 @@ func (this *Nodes) Index() {
 func (this *Nodes) Create() {
 	flash := beego.NewFlash()
 	nodeGroupId, _ := strconv.Atoi(this.GetString("node_group_id"))
+	nodeGroup := &models.NodeGroup{Id: int32(nodeGroupId)}
 	n := models.Node{
-		Name:        this.GetString("name"),
-		NodeGroupId: nodeGroupId,
+		Name:      this.GetString("name"),
+		NodeGroup: nodeGroup,
 	}
 
 	err := models.CreateNode(&n)
@@ -77,8 +78,9 @@ func (this *Nodes) Update() {
 	}
 	node.Name = this.GetString("name")
 	node.Summary = this.GetString("summary")
-	node.NodeGroupId, _ = strconv.Atoi(this.GetString("node_group_id"))
-	beego.Info("name, Summary, GroupId", node.Name, node.Summary, node.NodeGroupId)
+	nodeGroupId, _ := strconv.Atoi(this.GetString("node_group_id"))
+	node.NodeGroup.Id = int32(nodeGroupId)
+	beego.Info("name, Summary, GroupId", node.Name, node.Summary, node.NodeGroup.Id)
 	err = models.UpdateNode(&node)
 	this.Data["node"] = node
 	if err != nil {
