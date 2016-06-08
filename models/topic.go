@@ -71,11 +71,9 @@ func FindTopicPages(channel string, nodeId, page, perPage int) (topics []*Topic,
 	qs := o.QueryTable(TableName("topic"))
 	switch channel {
 	case "recent":
-		//qs.OrderBy("-id").RelatedSel().All(&topics)
 		pageInfo.Query = qs.OrderBy("-id").RelatedSel()
 	case "popular":
 		cond := orm.NewCondition().And("rank", 1).Or("stars_count__gte", 5)
-		//qs.SetCond(cond).RelatedSel().OrderBy("-last_active_mark", "-id").All(&topics)
 		pageInfo.Query = qs.SetCond(cond).RelatedSel().OrderBy("-last_active_mark", "-id")
 		//pageInfo.Query = pageInfo.Query.Where("rank = 1 or stars_count >= 5")
 		//pageInfo.Query = pageInfo.Query.Order("last_active_mark desc, id desc")
@@ -94,6 +92,18 @@ func FindTopicPages(channel string, nodeId, page, perPage int) (topics []*Topic,
 	pageInfo.PerPage = perPage
 	pageInfo.Paginate(page).All(&topics)
 
+	return
+}
+
+func GetSearchPages(search string, page int, perPage int) (topics []*Topic, pageInfo Pagination) {
+	o := orm.NewOrm()
+	qs := o.QueryTable(&Topic{})
+	cond := orm.NewCondition().And("title__icontains", search).Or("body__icontains", search)
+	pageInfo.Query = qs.SetCond(cond).RelatedSel()
+	path := fmt.Sprintf("/search?q=%v", search)
+	pageInfo.Path = path
+	pageInfo.PerPage = perPage
+	pageInfo.Paginate(page).All(&topics)
 	return
 }
 

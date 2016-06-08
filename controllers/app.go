@@ -193,5 +193,8 @@ func (this *BaseController) Captcha( /*id string*/ ) {
 
 func (this *BaseController) validateCaptcha(code string) bool {
 	cap := this.GetSession("captcha_id")
+	if cap == nil {
+		cap = ""
+	}
 	return captcha.VerifyString(cap.(string), code)
 }

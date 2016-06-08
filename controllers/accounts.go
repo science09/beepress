@@ -80,9 +80,9 @@ func (this *Accounts) LoginCreate() {
 	this.Data["controller_name"] = "Topic"
 	this.Layout = "layout/layout.html"
 	this.TplName = "accounts/login.html"
-
-	beego.Info(this.GetString("captcha"))
-	if !this.validateCaptcha(this.GetString("captcha")) {
+	captcha := this.GetString("captcha")
+	beego.Info(captcha)
+	if !this.validateCaptcha(captcha) {
 		flash.Error("验证码不正确")
 		flash.Store(&this.Controller)
 		return

@@ -2,8 +2,9 @@ package controllers
 
 import (
 	"beepress/models"
-	"fmt"
+
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/orm"
 	"golang.org/x/net/websocket"
 )
 
@@ -42,6 +43,14 @@ func (this *Home) Message() {
 }
 
 func (this *Home) Search() {
-	url := fmt.Sprintf("https://google.com?q=site:ruby-china.org %v", this.GetString("q"))
-	this.Redirect(url)
+	var topics []*models.Topic
+	var page int
+	queryStr := this.GetString("q")
+	this.Ctx.Input.Bind(&page, "page")
+	topics, pageInfo := models.GetSearchPages(queryStr, page, 5)
+	this.Data["topics"] = topics
+	this.Data["SearchName"] = queryStr
+	this.Data["page_info"] = pageInfo
+	this.Layout = "layout/layout.html"
+	this.TplName = "search/show.html"
 }
