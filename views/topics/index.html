@@ -34,9 +34,11 @@
 							{{end}}
 						</div>
 			    </div>
+					{{if .RepliesCount}}
 					<div class="count media-right">
 						<a href="/topics/{{.Id}}#{{.RepliesCount}}">{{.RepliesCount}}</a>
 					</div>
+					{{end}}
 			  </div>
 			  {{end}}
 			</div>

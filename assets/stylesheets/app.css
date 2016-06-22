@@ -407,7 +407,7 @@ a.followed .fa {
   .topics .topic .avatar {
     text-align: center; }
   .topics .topic .title {
-    font-size: 15px; }
+    font-size: 16px; }
   .topics .topic .info {
     color: #aaa;
     font-size: 12px;
@@ -581,7 +581,7 @@ a.followed .fa {
   .markdown blockquote {
     margin-bottom: 16px; }
   .markdown p {
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.5em; }
   .markdown hr {
     border: 3px solid #e0e0e0;

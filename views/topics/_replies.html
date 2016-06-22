@@ -12,7 +12,7 @@
 				</div>
 				<div class="media-body">
 					<div class="info">
-						{{user_name_tag $reply.User}} at {{timeago $reply.CreatedAt}}
+						{{user_name_tag $reply.User}} · #{{plus $idx 1}} · at {{timeago $reply.CreatedAt}}
 						<div class="pull-right opts">
 							{{if is_owner $.current_user $reply}}
 					      <a href="/replies/{{.Id}}/edit"><i class="fa fa-pencil"></i></a>

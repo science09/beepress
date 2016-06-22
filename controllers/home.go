@@ -4,7 +4,6 @@ import (
 	"beepress/models"
 
 	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/orm"
 	"golang.org/x/net/websocket"
 )
 
