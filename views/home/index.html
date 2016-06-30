@@ -1,8 +1,127 @@
-<div class="panel">
-  <div class="panel-heading">
-    Welcome
+<div class="panel panel-default hidden-xs">
+  <div class="panel-body" style="text-align: center;">
+    <div class="media" style="width: 480px; margin:0px auto; text-align: left;">
+      <div class="media-left">
+        <i class="fa fa-gift media-object" style="font-size: 55px; width: 55px; color: #333;"></i>
+      </div>
+      <div class="media-body" style="line-height: 200%; text-align: center;">
+        <div style="font-size: 15px">
+          BeePress 官方网站源码 <a href="https://github.com/science09/beepress" target="_blank">BeePress</a> 正式上线！
+        </div>
+        <div>
+          <code style="padding: 4px 10px;">git clone git@github.com:science09/beepress.git</code>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="panel-body">
+</div>
+<div class="row home-icons hidden-sm hidden-xs">
+  <div class="col-md-3">
+    <div class="item item1">
+      <div class="icon">
+        <a href="/topics"><i class="fa fa-comments-o"></i></a>
+      </div>
+      <div class="text">
+        <a href="/topics">BeePress社区<i class="pull-right fa fa-arrow-right"></i></a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="item item2">
+      <div class="icon">
+        <a href="/topics/node/8"><i class="fa fa-support"></i></a>
+      </div>
+      <div class="text">
+        <a href="/topics/node/8">反馈 <i class="pull-right fa fa-arrow-right"></i></a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="item item3">
+      <div class="icon">
+        <a href="/topics/node/9"><i class="fa fa-users"></i></a>
+      </div>
+      <div class="text">
+        <a href="/topics/node/9" title="Discovery">站内公告 <i class="pull-right fa fa-arrow-right"></i></a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="item item4">
+      <div class="icon">
+        <a href="/topics/popular"><i class="fa fa-diamond"></i></a>
+      </div>
+      <div class="text">
+        <a href="/topics/popular">精华文章 <i class="pull-right fa fa-arrow-right"></i></a>
+      </div>
+    </div>
+  </div>
+</div>
 
+<div class="row">
+  <div class="col-md-9">
+    <div class="topics panel panel-default">
+      <div class="panel-heading">
+        社区精华帖
+      </div>
+      <div class="panel-body">
+        {{range .topics}}
+        <div class="topic media clearfix">
+          <div class="avatar media-left">
+            {{user_avatar_tag .User "96x96"}}
+          </div>
+          <div class="infos media-body">
+            <div class="title media-heading"><a href="/topics/{{.Id}}#{{.RepliesCount}}">{{.Title}}</a> {{awesome_icon_tag .}}</div>
+            <div class="info">
+              {{node_name_tag .Node}}
+              {{user_name_tag .User}} 发表于 {{timeago .CreatedAt}}
+              {{if .LastReplyUserLogin}}
+              ・ 最后由 {{user_name_tag .LastReplyUserLogin}} 于 {{timeago .LastRepliedAt}} 回复
+              {{end}}
+            </div>
+          </div>
+          {{if .RepliesCount}}
+          <div class="count media-right">
+            <a href="/topics/{{.Id}}#{{.RepliesCount}}">{{.RepliesCount}}</a>
+          </div>
+          {{end}}
+        </div>
+        {{end}}
+      </div>
+      <div class="panel-footer">
+        <a href="/topics/popular">查看更多精华帖...</a>
+      </div>
+    </div>
+    {{template "partials/node-list.html" .}}
+  </div>
+
+  <div class="col-md-3 threads-index main-col">
+    <div class="panel panel-default corner-radius">
+      <div class="panel-heading">
+        <h3 class="panel-title">BeePress - 轻型技术交流社区</h3>
+      </div>
+      <div class="panel-body text-center">
+        <a href="/signup" class="btn btn-primary">
+          <i class="fa fa-user"> </i> 现在注册
+        </a>
+      </div>
+      <div class="panel-footer text-center">
+        已注册用户请 <a href="/signin">登录</a>
+      </div>
+    </div>
+    <div class="panel panel-default">
+      <div class="panel-heading">小贴士</div>
+      <div class="panel-body">
+        {{random_tip}}
+      </div>
+    </div>
+    <div class="panel panel-default">
+      <div class="panel-heading">统计信息</div>
+      <ul class="list-group">
+        <li class="list-group-item">社区会员: {{total "users"}} 人</li>
+        <li class="list-group-item">帖子数: {{total "topics"}} 个</li>
+        <li class="list-group-item">回帖数: {{total "replies"}} 条</li>
+      </ul>
+    </div>
   </div>
 </div>

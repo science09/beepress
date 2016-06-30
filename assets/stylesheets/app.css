@@ -4,9 +4,10 @@
  *= require stylesheets/highlight
  */
 /* Bootstrap Theme */
-body {
+html, body {
   background: #E7EAEC;
-  color: #222527; }
+  color: #222527;
+  height: 100%; }
 
 .header .navbar {
   background-color: #356DD0;
@@ -591,13 +592,13 @@ a.followed .fa {
   .markdown blockquote {
     margin-left: 20px; }
     .markdown blockquote p {
-      font-size: 12px;
+      font-size: 14px;
       color: #777;
       font-weight: normal;
       line-height: 160%; }
   .markdown pre {
     font-family: Monaco,Menlo,"Courier New", monospace;
-    font-size: 12px;
+    font-size: 14px;
     background-color: #F5F5F5;
     border: 0px;
     padding: 5px;
@@ -607,7 +608,7 @@ a.followed .fa {
     .markdown pre code {
       line-height: 150%;
       padding: 0 !important;
-      font-size: 12px !important;
+      font-size: 14px !important;
       background-color: #F5F5F5 !important;
       border: none !important; }
   .markdown p:last-child,
@@ -634,7 +635,7 @@ a.followed .fa {
     -webkit-border-radius: 4px;
     -webkit-box-shadow: 0 1px 1px white; }
   .markdown code {
-    font-size: 12px !important;
+    font-size: 14px !important;
     background-color: #f8f8ff !important;
     color: #444 !important;
     padding: 0 0.2em !important;
@@ -711,7 +712,7 @@ a.followed .fa {
       line-height: 1.6em;
       padding: 2px 0;
       color: #333;
-      font-size: 13px; }
+      font-size: 15px; }
     .markdown ul ul,
     .markdown ol ul {
       list-style-type: circle;
@@ -727,5 +728,86 @@ a.followed .fa {
 
 footer {
   margin-top: 50px; }
+
+#home_index{
+  line-height:160%;
+}
+
+.home-icons .item {
+  text-align: center;
+  margin-bottom: 15px;
+  border-radius: 3px;
+  background: #FFF;
+  border: 1px;
+  border-color: #e5e6e9 #dfe0e4 #d0d1d5 #dfe0e4;
+}
+
+.home-icons .item .icon {
+  display:block;
+}
+.home-icons .item .icon a {
+  display:block;
+  padding:20px 15px;
+}
+
+.home-icons .item1 .icon .fa {
+    color: #F86334;
+}
+.home-icons .item2 .icon .fa {
+    color: #FFD52F;
+}
+.home-icons .item3 .icon .fa {
+    color: #317DDA;
+}
+.home-icons .item4 .icon .fa {
+    color: #3BD54E;
+}
+
+.home-icons .item .icon .fa {
+    font-size: 60px;
+}
+
+.home-icons .item .text {
+    display: block;
+    text-align: left;
+    background: #F5F5F5;
+    border-top: 1px solid #E9E9E9;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 0 0 3px 3px;
+}
+
+.home-icons .item .text a {
+    display: block;
+    color: #666;
+    padding: 6px 15px;
+    text-decoration: none;
+}
+
+.footer {
+    margin-top: 10px;
+    padding-top: 10px;
+    color: #9CA4A9;
+    background-color: #FFF;
+    font-size: 15px;
+}
+
+.footer .copyright{
+    color: #666;
+}
+
+.page-wrap {
+  min-height: 100%;
+  margin-bottom: -90px;
+}
+
+.page-wrap:after {
+  content: "";
+  display: block;
+}
+
+.footer, .page-wrap:after {
+  height: 90px;
+}
 
 /*# sourceMappingURL=app.css.map */

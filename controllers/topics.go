@@ -175,10 +175,12 @@ func (this *Topics) Update() {
 }
 
 func (this *Topics) Delete() {
+	flash := beego.NewFlash()
 	this.requireUser()
 	t, _ := models.GetTopicById(help.StrToInt32(this.Ctx.Input.Param(":id")))
 	if !this.isOwner(t) {
-		beego.NewFlash().Error("没有修改的权限")
+		flash.Error("没有修改的权限")
+		flash.Store(&this.Controller)
 		this.Redirect("/")
 	}
 

@@ -32,10 +32,10 @@ func (this *Replies) Create() {
 	reply.User = &this.currentUser
 	err = models.CreateReply(reply)
 	if err != nil {
-		flash.Error("回帖失败")
+		beego.Error(err)
+		flash.Error(err.Error())
 		flash.Store(&this.Controller)
-		return
-		//this.Redirect(fmt.Sprintf("/topics/%v", this.topic.Id))
+		this.Redirect(fmt.Sprintf("/topics/%v", this.topic.Id))
 	}
 	replies, _ := models.GetReplyByTopicId(int32(topicId))
 	this.Data["replies"] = replies

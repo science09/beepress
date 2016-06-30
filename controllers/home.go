@@ -12,8 +12,10 @@ type Home struct {
 }
 
 func (this *Home) Index() {
+	topics, _ := models.FindTopicPages("popular", 0, 1, 10)
 	this.Data["title"] = "Home"
 	this.Data["controller_name"] = "Topic"
+	this.Data["topics"] = topics
 	this.Layout = "layout/layout.html"
 	this.TplName = "home/index.html"
 }
@@ -52,4 +54,9 @@ func (this *Home) Search() {
 	this.Data["page_info"] = pageInfo
 	this.Layout = "layout/layout.html"
 	this.TplName = "search/show.html"
+}
+
+func (this *Home) About() {
+	this.Layout = "layout/layout.html"
+	this.TplName = "home/about.html"
 }

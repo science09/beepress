@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/validation"
 )
@@ -58,12 +57,13 @@ func (r *Reply) validate() validation.Validation {
 }
 
 func CreateReply(r *Reply) (err error) {
-	//v := r.validate()
-	//if v.HasErrors() {
-	//	return v
-	//}
-
 	//需要先验证reply的正确性
+	if v := r.validate(); v.HasErrors() {
+		for _, e := range v.Errors {
+			err = errors.New(e.Message)
+			return
+		}
+	}
 	o := orm.NewOrm()
 	_, err = o.Insert(r)
 	if err != nil {
@@ -71,7 +71,6 @@ func CreateReply(r *Reply) (err error) {
 		return
 	}
 	//update topic reply count
-	beego.Info("creat reply ---:", r.Topic.Id)
 	o.QueryTable(&Topic{}).Filter("id", r.Topic.Id).Update(orm.Params{"replies_count": orm.ColValue(orm.ColAdd, 1)})
 	r.Topic.UpdateLastReply(r)
 	go r.NotifyReply()

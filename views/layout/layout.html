@@ -16,11 +16,12 @@
   {{setting "custom_head_html"}}
 </head>
 <body>
-  {{template "layout/header.html" .}}
-  <div class="main-container container">
-    {{.LayoutContent}}
+  <div class="page-wrap">
+    {{template "layout/header.html" .}}
+    <div class="main-container container">
+      {{.LayoutContent}}
+    </div>
   </div>
-
   <!--{{template "partials/node-list.html" .}}-->
 
   {{template "layout/footer.html" .}}

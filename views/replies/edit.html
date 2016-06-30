@@ -6,6 +6,9 @@
 		  <input type="hidden" name="csrf_token" value="{{.csrf_token}}" />
 		  <div class="form-group">
 		    <textarea class="form-control" name="body" rows="5" placeholder="">{{.reply.Body}}</textarea>
+				{{if .flash.error}}
+				<div class="alert alert-warning">{{.flash.error}}</div>
+				{{end}}
 		  </div>
 			<div class="actions">
 		  		<button type="submit" class="btn btn-primary">提交修改</button>

@@ -107,9 +107,21 @@ func GetSearchPages(search string, page int, perPage int) (topics []*Topic, page
 	return
 }
 
+func (t *Topic) validate() validation.Validation {
+	v := validation.Validation{}
+	v.Required(t.Title, "标题").Message("不能为空")
+	v.Required(t.Node.Id, "").Message("请选择节点名称")
+	v.Required(t.Body, "内容").Message("不能为空")
+	return v
+}
+
 func CreateTopic(t *Topic) error {
 	//先验证topic的有效性
-
+	if v := t.validate(); v.HasErrors() {
+		for _, e := range v.Errors {
+			return errors.New(e.Message)
+		}
+	}
 	(*t).LastActiveMark = time.Now().Unix()
 	_, err := orm.NewOrm().Insert(t)
 	if err != nil {

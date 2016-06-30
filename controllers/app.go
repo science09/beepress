@@ -198,3 +198,8 @@ func (this *BaseController) validateCaptcha(code string) bool {
 	}
 	return captcha.VerifyString(cap.(string), code)
 }
+
+func (this *BaseController) FlashWrite(msg string) {
+	flash := beego.NewFlash()
+	flash.Store(&this.Controller)
+}
