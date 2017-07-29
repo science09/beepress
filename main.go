@@ -1,9 +1,10 @@
 package main
 
 import (
-	"beepress/help"
-	"beepress/models"
-	_ "beepress/routers"
+	"github.com/science09/beepress/help"
+	"github.com/science09/beepress/models"
+	_ "github.com/science09/beepress/routers"
+
 	"github.com/astaxie/beego"
 	"github.com/huacnlee/train"
 )

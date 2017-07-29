@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"beepress/models"
 	"bytes"
 	"fmt"
 	"reflect"
@@ -11,6 +10,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/validation"
 	"github.com/dchest/captcha"
+	"github.com/science09/beepress/models"
 )
 
 type NestPreparer interface {

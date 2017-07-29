@@ -1,8 +1,8 @@
 package routers
 
 import (
-	"beepress/controllers"
 	"github.com/astaxie/beego"
+	"github.com/science09/beepress/controllers"
 )
 
 func init() {

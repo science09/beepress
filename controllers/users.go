@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"beepress/models"
+	"github.com/science09/beepress/models"
 )
 
 type Users struct {

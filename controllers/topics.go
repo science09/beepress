@@ -1,12 +1,13 @@
 package controllers
 
 import (
-	"beepress/help"
-	"beepress/models"
 	"fmt"
-	"github.com/astaxie/beego"
 	"strconv"
 	"strings"
+
+	"github.com/astaxie/beego"
+	"github.com/science09/beepress/help"
+	"github.com/science09/beepress/models"
 )
 
 var (

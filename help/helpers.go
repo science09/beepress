@@ -1,18 +1,18 @@
 package help
 
 import (
-	"beepress/models"
 	"fmt"
-	"github.com/astaxie/beego"
-	"github.com/huacnlee/timeago"
-	"github.com/huacnlee/train"
 	"html/template"
 	"math/rand"
 	"reflect"
 	"strings"
 	"time"
 
+	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/validation"
+	"github.com/huacnlee/timeago"
+	"github.com/huacnlee/train"
+	"github.com/science09/beepress/models"
 )
 
 var (

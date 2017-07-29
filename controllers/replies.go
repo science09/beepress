@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"beepress/models"
 	"fmt"
 	"github.com/astaxie/beego"
+	"github.com/science09/beepress/models"
 	"strconv"
 )
 

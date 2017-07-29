@@ -1,11 +1,11 @@
 package controllers
 
 import (
-	"beepress/models"
 	"regexp"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/validation"
+	"github.com/science09/beepress/models"
 )
 
 //用户账户相关的控制器

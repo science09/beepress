@@ -1,9 +1,8 @@
 package controllers
 
 import (
-	"beepress/models"
-
 	"github.com/astaxie/beego"
+	"github.com/science09/beepress/models"
 	"golang.org/x/net/websocket"
 )
 
